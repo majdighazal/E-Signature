@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>E-Signature</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Sacramento&family=Caveat:wght@500;600&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+  --ink-900:#10192B;
+  --ink-700:#2A3A55;
+  --ink-500:#5B6B85;
+  --surface:#E9ECF1;
+  --surface-2:#DDE1E9;
+  --paper:#FFFFFF;
+  --line:#CCD2DC;
+  --line-strong:#AEB6C4;
+  --brass:#A07A34;
+  --brass-light:#C9A15C;
+  --brass-dim:#EFE6D3;
+  --ok:#2F6B4F;
+  --ok-bg:#E4F0E9;
+  --danger:#B23A2E;
+  --danger-bg:#FBEAE8;
+  --radius-sm:4px;
+  --radius-md:8px;
+  --shadow-paper:0 1px 2px rgba(16,25,43,.06), 0 10px 28px rgba(16,25,43,.10);
+  --shadow-panel:0 1px 2px rgba(16,25,43,.05), 0 2px 10px rgba(16,25,43,.06);
+  --font-ui:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+:root[data-theme="dark"], :root:not([data-theme="light"]) {
+  /* published-page dark mode kept subtle: this tool reads as a document
+     workspace, so we shift chrome only and keep the paper itself white */
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink-900:#EDEFF3;
+    --ink-700:#C7CEDA;
+    --ink-500:#8D97AB;
+    --surface:#161B26;
+    --surface-2:#1E2531;
+    --paper:#FFFFFF;
+    --line:#2C3344;
+    --line-strong:#3A4356;
+    --brass:#D3AD68;
+    --brass-light:#E4C58C;
+    --brass-dim:#2E2A1C;
+    --ok:#63C797;
+    --ok-bg:#123023;
+    --danger:#E5766A;
+    --danger-bg:#3A1C1A;
+    --shadow-paper:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.45);
+    --shadow-panel:0 1px 2px rgba(0,0,0,.3), 0 2px 10px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --ink-900:#EDEFF3;
+  --ink-700:#C7CEDA;
+  --ink-500:#8D97AB;
+  --surface:#161B26;
+  --surface-2:#1E2531;
+  --paper:#FFFFFF;
+  --line:#2C3344;
+  --line-strong:#3A4356;
+  --brass:#D3AD68;
+  --brass-light:#E4C58C;
+  --brass-dim:#2E2A1C;
+  --ok:#63C797;
+  --ok-bg:#123023;
+  --danger:#E5766A;
+  --danger-bg:#3A1C1A;
+  --shadow-paper:0 1px 2px rgba(0,0,0,.4), 0 10px 28px rgba(0,0,0,.45);
+  --shadow-panel:0 1px 2px rgba(0,0,0,.3), 0 2px 10px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:var(--font-ui);
+  background:var(--surface);
+  color:var(--ink-900);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+button{font-family:inherit;}
+img{max-width:100%;}
+:focus-visible{outline:2px solid var(--brass); outline-offset:2px;}
+
+/* ---------- app shell ---------- */
+#app{
+  height:100vh;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:10px 18px;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+  flex:0 0 auto;
+  min-height:58px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:0 0 auto;
+}
+.brand-mark{
+  width:32px;height:32px;
+  border-radius:50%;
+  border:1.5px solid var(--brass);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--brass);
+  flex:0 0 auto;
+}
+.brand-name{
+  font-weight:600;
+  font-size:16.5px;
+  letter-spacing:.1px;
+  color:var(--ink-900);
+  white-space:nowrap;
+}
+.brand-name small{
+  display:block;
+  font-weight:400;
+  font-size:11.5px;
+  color:var(--ink-500);
+  margin-top:1px;
+}
+.doc-status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+  flex:1 1 auto;
+  padding-left:14px;
+  margin-left:4px;
+  border-left:1px solid var(--line);
+  overflow:hidden;
+}
+.doc-status .fname{
+  font-size:13.5px;
+  color:var(--ink-700);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chip{
+  flex:0 0 auto;
+  font-size:11px;
+  font-weight:600;
+  padding:3px 9px;
+  border-radius:100px;
+  letter-spacing:.2px;
+}
+.chip-neutral{background:var(--surface-2); color:var(--ink-500);}
+.chip-ok{background:var(--ok-bg); color:var(--ok);}
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+.btn{
+  appearance:none;
+  border:1px solid var(--line-strong);
+  background:var(--paper);
+  color:var(--ink-900);
+  font-size:13.5px;
+  font-weight:500;
+  padding:8px 14px;
+  border-radius:var(--radius-sm);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  line-height:1.2;
+  transition:background .12s ease, border-color .12s ease, transform .05s ease;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--ink-500);}
+.btn:active{transform:translateY(1px);}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+.btn-primary{
+  background:var(--ink-900);
+  border-color:var(--ink-900);
+  color:var(--paper);
+}
+.btn-primary:hover{background:var(--ink-700); border-color:var(--ink-700);}
+.btn-accent{
+  background:var(--brass);
+  border-color:var(--brass);
+  color:#241D0E;
+}
+.btn-accent:hover{background:var(--brass-light); border-color:var(--brass-light);}
+.btn-ghost{
+  background:transparent;
+  border-color:transparent;
+  color:var(--ink-700);
+  padding:8px 10px;
+}
+.btn-ghost:hover{background:var(--surface-2);}
+.btn-sm{padding:6px 10px; font-size:12.5px;}
+.btn-block{width:100%; justify-content:center;}
+.btn svg{flex:0 0 auto;}
+
+/* ---------- workspace ---------- */
+.workspace{
+  flex:1 1 auto;
+  display:flex;
+  min-height:0;
+}
+
+.viewer-pane{
+  flex:1 1 auto;
+  min-width:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background:var(--surface);
+  padding:28px 24px 120px;
+  position:relative;
+}
+.viewer-pane.placing{cursor:crosshair;}
+.viewer-inner{
+  max-width:840px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:22px;
+}
+
+/* ---------- dropzone / empty state ---------- */
+.dropzone{
+  width:100%;
+  max-width:640px;
+  margin:6vh auto 0;
+  border:1.5px dashed var(--line-strong);
+  border-radius:var(--radius-md);
+  background:var(--paper);
+  padding:52px 28px;
+  text-align:center;
+  transition:border-color .15s ease, background .15s ease;
+}
+.dropzone.dragover{
+  border-color:var(--brass);
+  background:var(--brass-dim);
+}
+.dropzone-icon{
+  width:52px;height:52px;
+  margin:0 auto 18px;
+  border-radius:50%;
+  background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-700);
+}
+.dropzone h1{
+  font-size:19px;
+  font-weight:600;
+  margin:0 0 6px;
+  color:var(--ink-900);
+}
+.dropzone p{
+  font-size:13.5px;
+  color:var(--ink-500);
+  margin:0 0 22px;
+  line-height:1.5;
+}
+.dropzone .filetypes{
+  margin-top:18px;
+  font-size:11.5px;
+  color:var(--ink-500);
+}
+
+/* ---------- pdf pages ---------- */
+.pdf-page{
+  position:relative;
+  width:100%;
+  background:var(--paper);
+  box-shadow:var(--shadow-paper);
+  line-height:0;
+}
+.pdf-page canvas{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.page-label{
+  position:absolute;
+  top:-22px;
+  left:0;
+  font-size:11px;
+  color:var(--ink-500);
+  line-height:1;
+}
+.sig-layer{
+  position:absolute;
+  inset:0;
+}
+
+/* ---------- docx page ---------- */
+.docx-page{
+  position:relative;
+  width:100%;
+  max-width:800px;
+  background:var(--paper);
+  box-shadow:var(--shadow-paper);
+  padding:56px 60px;
+  min-height:300px;
+  color:#1a1a1a;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size:14.5px;
+  line-height:1.65;
+}
+.docx-page img{max-width:100%;height:auto;}
+.docx-page table{border-collapse:collapse; max-width:100%;}
+.docx-page td, .docx-page th{border:1px solid #999; padding:4px 8px;}
+
+/* ---------- placed signature/stamp elements ---------- */
+.placed{
+  position:absolute;
+  cursor:grab;
+  touch-action:none;
+  border:1.5px dashed transparent;
+  padding:4px;
+  display:flex;
+  align-items:flex-end;
+}
+.placed:hover, .placed.active{
+  border-color:var(--brass);
+  background:rgba(160,122,52,.06);
+}
+.placed img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+}
+.placed.dragging{cursor:grabbing;}
+.placed-handle{
+  position:absolute;
+  width:15px;height:15px;
+  right:-7px;bottom:-7px;
+  background:var(--paper);
+  border:1.5px solid var(--brass);
+  border-radius:50%;
+  cursor:nwse-resize;
+  touch-action:none;
+}
+.placed-del{
+  position:absolute;
+  top:-11px;right:-11px;
+  width:20px;height:20px;
+  border-radius:50%;
+  background:var(--danger);
+  color:#fff;
+  border:1.5px solid var(--paper);
+  font-size:12px;
+  line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  padding:0;
+}
+.placed:not(:hover):not(.active) .placed-handle,
+.placed:not(:hover):not(.active) .placed-del{
+  opacity:0;
+  pointer-events:none;
+}
+@media (hover:none){
+  .placed .placed-handle, .placed .placed-del{opacity:1; pointer-events:auto;}
+}
+
+/* ---------- tools pane (desktop sidebar) ---------- */
+.tools-pane{
+  flex:0 0 360px;
+  width:360px;
+  background:var(--paper);
+  border-left:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+}
+.tools-tabs{
+  display:flex;
+  border-bottom:1px solid var(--line);
+  flex:0 0 auto;
+}
+.tools-tab{
+  flex:1 1 0;
+  padding:13px 8px 12px;
+  text-align:center;
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink-500);
+  background:none;
+  border:none;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+}
+.tools-tab.active{
+  color:var(--ink-900);
+  border-bottom-color:var(--brass);
+}
+.tools-body{
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:18px 18px 28px;
+}
+.tools-panel{display:none;}
+.tools-panel.active{display:block;}
+
+.field-label{
+  display:block;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--ink-700);
+  margin:0 0 7px;
+}
+.field-group{margin-bottom:18px;}
+.hint{font-size:12px; color:var(--ink-500); line-height:1.5; margin:6px 0 0;}
+
+.subtabs{
+  display:flex;
+  gap:6px;
+  margin-bottom:14px;
+  background:var(--surface-2);
+  padding:3px;
+  border-radius:var(--radius-sm);
+}
+.subtab{
+  flex:1 1 0;
+  border:none;
+  background:none;
+  padding:7px 8px;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--ink-500);
+  border-radius:3px;
+  cursor:pointer;
+}
+.subtab.active{background:var(--paper); color:var(--ink-900); box-shadow:0 1px 2px rgba(16,25,43,.12);}
+.subpanel{display:none;}
+.subpanel.active{display:block;}
+
+.pad-wrap{
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  background:
+    linear-gradient(var(--paper),var(--paper)) padding-box,
+    repeating-linear-gradient(transparent, transparent 27px, var(--line) 28px);
+  background-color:#fff;
+  touch-action:none;
+  overflow:hidden;
+}
+#sigPad{
+  display:block;
+  width:100%;
+  height:140px;
+  cursor:crosshair;
+  touch-action:none;
+}
+.pad-toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+  flex-wrap:wrap;
+}
+.swatches{display:flex; gap:6px;}
+.swatch{
+  width:20px;height:20px;
+  border-radius:50%;
+  border:1.5px solid var(--line-strong);
+  cursor:pointer;
+  padding:0;
+}
+.swatch.active{border-color:var(--brass); box-shadow:0 0 0 2px var(--brass-dim);}
+input[type="range"]{width:70px; accent-color:var(--brass);}
+input[type="text"], input[type="date"], select{
+  width:100%;
+  border:1px solid var(--line-strong);
+  border-radius:var(--radius-sm);
+  padding:8px 10px;
+  font-size:13.5px;
+  color:var(--ink-900);
+  background:var(--paper);
+  font-family:inherit;
+}
+select{cursor:pointer;}
+.typed-preview{
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  background:#fff;
+  min-height:90px;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px;
+  margin-top:12px;
+  overflow:hidden;
+}
+.typed-preview span{
+  font-size:38px;
+  line-height:1;
+  white-space:nowrap;
+}
+.checkbox-row{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--ink-700);
+  margin-bottom:14px;
+}
+.checkbox-row input{accent-color:var(--brass); width:16px;height:16px;}
+
+.divider{height:1px; background:var(--line); margin:20px 0;}
+
+.placed-list{display:flex; flex-direction:column; gap:8px;}
+.placed-row{
+  display:flex; align-items:center; gap:10px;
+  border:1px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:8px 10px;
+}
+.placed-row .thumb{
+  width:40px;height:28px;
+  border:1px solid var(--line);
+  border-radius:3px;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  flex:0 0 auto;
+}
+.placed-row .thumb img{width:100%;height:100%;object-fit:contain;}
+.placed-row .meta{flex:1 1 auto; min-width:0;}
+.placed-row .meta .t1{font-size:12.5px; font-weight:500; color:var(--ink-900);}
+.placed-row .meta .t2{font-size:11px; color:var(--ink-500);}
+.placed-row .rm{
+  border:none;background:none;color:var(--ink-500);
+  cursor:pointer; padding:4px; flex:0 0 auto;
+}
+.placed-row .rm:hover{color:var(--danger);}
+.empty-note{
+  font-size:12.5px; color:var(--ink-500);
+  text-align:center; padding:26px 8px;
+  border:1px dashed var(--line);
+  border-radius:var(--radius-sm);
+}
+
+.placing-banner{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  background:var(--ink-900);
+  color:#fff;
+  padding:11px 18px;
+  border-radius:100px;
+  font-size:13px;
+  display:none;
+  align-items:center;
+  gap:12px;
+  box-shadow:var(--shadow-panel);
+  z-index:60;
+}
+.placing-banner.show{display:flex;}
+.placing-banner button{
+  background:rgba(255,255,255,.14);
+  border:none;color:#fff;
+  border-radius:100px;
+  padding:5px 12px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* ---------- mobile drawer ---------- */
+.mobile-fab{
+  display:none;
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  width:54px;height:54px;
+  border-radius:50%;
+  background:var(--ink-900);
+  color:#fff;
+  border:none;
+  align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(16,25,43,.35);
+  z-index:55;
+  cursor:pointer;
+}
+.drawer-scrim{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(16,25,43,.35);
+  z-index:70;
+}
+.drawer-scrim.show{display:block;}
+.drawer-handle{display:none;}
+
+/* ---------- toasts ---------- */
+#toastContainer{
+  position:fixed;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:100;
+  width:min(92vw, 380px);
+}
+.toast{
+  background:var(--ink-900);
+  color:#fff;
+  font-size:13px;
+  padding:11px 14px;
+  border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-panel);
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+}
+.toast.error{background:var(--danger);}
+.toast.success{background:var(--ok);}
+
+/* ---------- loading overlay ---------- */
+#loadingOverlay{
+  position:fixed; inset:0;
+  background:rgba(233,236,241,.85);
+  display:none;
+  align-items:center; justify-content:center;
+  z-index:90;
+  flex-direction:column;
+  gap:14px;
+}
+:root[data-theme="dark"] #loadingOverlay{ background:rgba(22,27,38,.85); }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) #loadingOverlay{ background:rgba(22,27,38,.85); }
+}
+#loadingOverlay.show{display:flex;}
+.spinner{
+  width:34px;height:34px;
+  border-radius:50%;
+  border:3px solid var(--line-strong);
+  border-top-color:var(--brass);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loadingOverlay .msg{font-size:13.5px; color:var(--ink-700);}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px){
+  .tools-pane{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    width:auto;
+    flex:none;
+    border-left:none;
+    border-top:1px solid var(--line);
+    border-radius:16px 16px 0 0;
+    max-height:78vh;
+    transform:translateY(100%);
+    transition:transform .22s ease;
+    z-index:75;
+    box-shadow:0 -8px 24px rgba(16,25,43,.2);
+  }
+  .tools-pane.open{transform:translateY(0);}
+  .drawer-handle{
+    display:block;
+    width:36px;height:4px;
+    background:var(--line-strong);
+    border-radius:100px;
+    margin:10px auto 2px;
+    flex:0 0 auto;
+  }
+  .mobile-fab{display:flex;}
+  .viewer-pane{padding:20px 14px 100px;}
+  .brand-name small{display:none;}
+  .topbar{padding:9px 12px; gap:10px;}
+  .topbar-actions .btn span.long{display:none;}
+}
+.btn span.short{display:none;}
+@media (max-width: 900px){
+  .topbar-actions .btn span.short{display:inline;}
+}
+@media (max-width: 520px){
+  .docx-page{padding:34px 22px;}
+  .brand-name{font-size:15px;}
+  .doc-status{padding-left:10px;}
+  .tools-body{padding:14px 14px 24px;}
+}
+
+/* ===== E-Signature commercial rebuild ===== */
+:root{--es-navy:#102238;--es-navy2:#1b3654;--es-gold:#c79a4a;--es-gold2:#e0ba72;--es-soft:#e9eef4;}
+body{background:#e8edf3;}
+.topbar{min-height:68px;padding:11px 18px;background:#fff;box-shadow:0 2px 18px rgba(15,34,56,.08);z-index:20;}
+.brand-mark{border:none;border-radius:12px;background:linear-gradient(145deg,var(--es-navy),var(--es-navy2));color:#fff;width:40px;height:40px;box-shadow:0 8px 18px rgba(16,34,56,.2);}
+.brand-name{font-size:18px;font-weight:800;color:var(--es-navy);}.brand-name small{font-size:11px;color:#78869a;}
+.workspace{background:#e9eef4;}
+.tools-pane{order:-1;flex:0 0 420px;width:420px;border-left:none;border-right:1px solid #213a57;background:linear-gradient(180deg,#162b44 0%,#0d1e32 100%);box-shadow:12px 0 32px rgba(15,34,56,.14);color:#fff;}
+.signing-header{padding:20px 20px 8px;}.signing-kicker{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#a9bad0;}.signing-title{font-size:26px;font-weight:800;margin-top:5px;color:#fff;}.signing-steps{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}.signing-steps span{font-size:11px;padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.07);color:#bfcddd;border:1px solid rgba(255,255,255,.09)}.signing-steps .active{background:rgba(199,154,74,.18);border-color:rgba(224,186,114,.4);color:#f3d494;}
+.tools-body{padding:12px 20px 26px;}.subtabs{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:5px;gap:5px}.subtab{color:#c8d5e4;border-radius:9px;font-weight:700}.subtab.active{background:linear-gradient(180deg,var(--es-gold2),var(--es-gold));color:#1a1409;box-shadow:0 7px 16px rgba(199,154,74,.25)}
+.field-label{color:#e7eef8;font-weight:700}.hint{color:#aebdd0}.pad-wrap,.typed-preview,.import-signature-box{background:#fff;border:1px solid rgba(255,255,255,.2);border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.18)}#sigPad{height:165px}.typed-preview{min-height:110px}.import-signature-box{min-height:150px;display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}.import-signature-box img{max-height:125px;max-width:100%;object-fit:contain}.import-signature-empty{color:#8591a1;font-size:13px}
+input[type=text],input[type=date],select{border-radius:10px;background:#fff;color:#15263a;border:1px solid #d6dee8}.btn{border-radius:10px;font-weight:700}.btn-accent{background:linear-gradient(180deg,var(--es-gold2),var(--es-gold));border-color:var(--es-gold);color:#171209;box-shadow:0 8px 18px rgba(199,154,74,.25)}.btn-ghost{color:#e6edf7;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}.btn-replace{background:#fff;color:#1b3654;border:1px solid #cfd8e4;box-shadow:0 4px 12px rgba(16,34,56,.06)}.btn-replace:hover{background:#f4f7fa;border-color:#9bacbf}
+.options-card{border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.06);padding:14px;margin:2px 0 14px}.options-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:8px}.option-check{display:flex;align-items:center;gap:9px;padding:10px 2px;color:#fff;font-size:13px;font-weight:650}.option-check input{width:18px;height:18px;accent-color:var(--es-gold)}.option-expand{margin:0 0 8px 27px;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}.date-choice-row{display:flex;gap:16px;color:#e2eaf4;font-size:12px}.date-choice-row label{display:flex;align-items:center;gap:6px}.date-choice-row input{accent-color:var(--es-gold)}
+.insert-signature-btn{min-height:52px;font-size:16px;justify-content:center;gap:10px}.insert-help{font-size:11.5px;line-height:1.45;color:#aebdd0;text-align:center;margin-top:9px}
+.viewer-pane{background:radial-gradient(circle at 50% 0,#f7f9fc 0,#edf1f6 56%,#e5eaf0 100%);padding:30px 28px 100px}.pdf-page,.docx-page{box-shadow:0 2px 5px rgba(16,34,56,.06),0 18px 44px rgba(16,34,56,.13)}
+.placed{border:1.5px solid rgba(16,34,56,.28);border-radius:10px;background:rgba(255,255,255,.04);padding:5px;box-shadow:0 8px 20px rgba(16,34,56,.10)}.placed:hover,.placed.active{border-color:var(--es-gold);background:rgba(199,154,74,.06)}.placed-del{opacity:1!important;pointer-events:auto!important;top:-13px;right:-13px;width:29px;height:29px;border-radius:50%;background:#c93e34;color:#fff;border:2px solid #fff;font-size:18px;font-weight:800;box-shadow:0 6px 14px rgba(201,62,52,.28);z-index:8}.placed-handle{opacity:1!important;pointer-events:auto!important;width:18px;height:18px;right:-8px;bottom:-8px;border:2px solid #fff;box-shadow:0 4px 10px rgba(16,34,56,.20)}
+.placing-banner{display:none!important}
+@media(max-width:900px){.tools-pane{order:0;width:auto;flex:none;border-right:none;background:linear-gradient(180deg,#162b44,#0d1e32)}.viewer-pane{padding:18px 12px 100px}.signing-header{padding:15px 15px 6px}.tools-body{padding:10px 15px 24px}.brand-name small{display:none}}
+
+
+/* direct delete control */
+.placed-del{
+  touch-action:manipulation !important;
+  -webkit-tap-highlight-color:transparent;
+  cursor:pointer !important;
+  user-select:none;
+}
+.placed-del:active{
+  transform:scale(.92);
+}
+
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20L14.5 9.5M14.5 9.5L18.5 5.5C19.3 4.7 20.6 4.7 21.4 5.5C22.2 6.3 22.2 7.6 21.4 8.4L17.4 12.4M14.5 9.5L17.4 12.4M4 20L8 19.2L17.4 9.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="brand-name">E-Signature<small>Secure document signing</small></div>
+    </div>
+    <div class="doc-status" id="docStatus" style="display:none;">
+      <span class="fname" id="fnameLabel"></span>
+      <span class="chip chip-neutral" id="statusChip">Not signed</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-replace" id="replaceBtn" style="display:none;" title="Replace document">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4v6h6M20 20v-6h-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.6 15A8 8 0 0019.4 9M19.4 9V4M19.4 9h-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="long">Replace Document</span><span class="short">Replace</span>
+      </button>
+      <button class="btn btn-primary" id="exportBtn" style="display:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18v2a1 1 0 001 1h14a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="long">Export signed PDF</span><span class="short">Export</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <main class="viewer-pane" id="viewerPane">
+      <div class="viewer-inner" id="viewerInner">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h1>Drop a document to begin</h1>
+          <p>Import a PDF or Word file, then draw, type, or import your signature and sign securely in your browser.</p>
+          <button class="btn btn-accent" id="browseBtn">Choose a file</button>
+          <div class="filetypes">Accepts .pdf and .docx — files stay in your browser and are never uploaded.</div>
+        </div>
+        <div id="pdfPages" style="display:none; width:100%;"></div>
+        <div id="docxWrap" style="display:none; width:100%; max-width:800px;">
+          <div class="docx-page" id="docPage"></div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="tools-pane" id="toolsPane">
+      <div class="drawer-handle" id="drawerHandle"></div>
+      <div class="signing-header">
+        <div class="signing-kicker">SECURE BROWSER SIGNING</div>
+        <div class="signing-title">Add Signature</div>
+        <div class="signing-steps"><span class="active">1&nbsp; Signature</span><span>2&nbsp; Options</span><span>3&nbsp; Insert</span></div>
+      </div>
+      <div class="tools-body">
+
+        <div class="tools-panel active" id="panel-signature">
+          <div class="subtabs">
+            <button class="subtab active" data-sub="draw">Draw</button>
+            <button class="subtab" data-sub="type">Type</button>
+            <button class="subtab" data-sub="import">Import</button>
+          </div>
+
+          <div class="subpanel active" id="sub-draw">
+            <label class="field-label">Draw your signature</label>
+            <div class="pad-wrap">
+              <canvas id="sigPad"></canvas>
+            </div>
+            <div class="pad-toolbar">
+              <div class="swatches" id="penSwatches">
+                <button class="swatch active" style="background:#10192B" data-color="#10192B" title="Ink"></button>
+                <button class="swatch" style="background:#1E3A8A" data-color="#1E3A8A" title="Blue"></button>
+                <button class="swatch" style="background:#7A1F1F" data-color="#7A1F1F" title="Maroon"></button>
+                <button class="swatch" style="background:#000000" data-color="#000000" title="Black"></button>
+              </div>
+              <input type="range" id="penWidth" min="1" max="5" step="0.5" value="2.5" title="Pen thickness">
+              <button class="btn btn-ghost btn-sm" id="clearPad">Clear</button>
+            </div>
+          </div>
+
+          <div class="subpanel" id="sub-type">
+            <label class="field-label">Type your name</label>
+            <input type="text" id="typedName" placeholder="e.g. Majdi Haddad" maxlength="60">
+            <div class="field-group" style="margin-top:12px;">
+              <label class="field-label">Style</label>
+              <select id="typedFont">
+                <option value="Sacramento" selected>Flowing</option>
+                <option value="Dancing Script">Classic script</option>
+                <option value="Caveat">Casual hand</option>
+              </select>
+            </div>
+            <div class="swatches" id="typeSwatches">
+              <button class="swatch active" style="background:#10192B" data-color="#10192B" title="Ink"></button>
+              <button class="swatch" style="background:#1E3A8A" data-color="#1E3A8A" title="Blue"></button>
+              <button class="swatch" style="background:#000000" data-color="#000000" title="Black"></button>
+            </div>
+            <div class="typed-preview" id="typedPreview"><span id="typedPreviewText" style="font-family:'Sacramento',cursive; color:#10192B;">Your signature</span></div>
+          </div>
+
+          <div class="subpanel" id="sub-import">
+            <label class="field-label">Import signature photo</label>
+            <div class="import-signature-box" id="importSignatureBox">
+              <img id="importedSignaturePreview" alt="Imported signature preview" style="display:none;">
+              <div id="importSignatureEmpty" class="import-signature-empty">PNG, JPG or WEBP</div>
+            </div>
+            <input type="file" id="signatureImageInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <div class="pad-toolbar">
+              <button class="btn btn-accent btn-sm" id="chooseSignatureBtn">Choose Signature Photo</button>
+              <button class="btn btn-ghost btn-sm" id="removeSavedSignatureBtn" style="display:none;">Remove Saved</button>
+            </div>
+            <p class="hint">The photo background is cleaned automatically and the signature shape is extracted into a transparent professional stamp.</p>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="options-card">
+            <div class="options-title">Signature Options</div>
+            <label class="option-check"><input type="checkbox" id="includeName"><span>Include Name</span></label>
+            <div class="option-expand" id="nameOptions" style="display:none;">
+              <label class="field-label">Signer name</label>
+              <input type="text" id="signerName" placeholder="e.g. Majdi Haddad" maxlength="80">
+            </div>
+
+            <label class="option-check"><input type="checkbox" id="includeDate"><span>Include Date</span></label>
+            <div class="option-expand" id="dateOptions" style="display:none;">
+              <div class="date-choice-row">
+                <label><input type="radio" name="dateMode" value="today" checked> Today</label>
+                <label><input type="radio" name="dateMode" value="manual"> Manual</label>
+              </div>
+              <div id="manualDateWrap" style="display:none; margin-top:10px;">
+                <label class="field-label">Date</label>
+                <input type="date" id="manualDateValue">
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-accent btn-block insert-signature-btn" id="placeSigBtn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 19h4L20 8a2.2 2.2 0 0 0-3.1-3.1L6 15.8 5 19Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m14.8 7 3.2 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Insert Signature
+          </button>
+          <div class="insert-help">Inserted immediately on the visible page. Drag to move, resize from the corner, or tap × to delete directly.</div>
+
+          <button class="btn btn-ghost btn-block" id="clearAllBtn" style="margin-top:10px;display:none;">Clear All Signatures</button>
+          </div>
+        </div>
+
+        <div class="tools-panel" id="panel-placed" style="display:none;">
+          <div class="placed-list" id="placedList"></div>
+          <div class="empty-note" id="placedEmpty">Nothing placed yet. Configure a signature and tap "Place signature on document."</div>
+          <button class="btn btn-ghost btn-block" id="legacyClearAllBtn" style="margin-top:14px; display:none;">Clear all placements</button>
+        </div>
+
+      </div>
+    </aside>
+  </div>
+</div>
+
+<button class="mobile-fab" id="mobileFab" aria-label="Open signature tools">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20L14.5 9.5M14.5 9.5L18.5 5.5C19.3 4.7 20.6 4.7 21.4 5.5C22.2 6.3 22.2 7.6 21.4 8.4L17.4 12.4M14.5 9.5L17.4 12.4M4 20L8 19.2L17.4 9.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+<div class="drawer-scrim" id="drawerScrim"></div>
+
+<div class="placing-banner" id="placingBanner">
+  <span id="placingBannerText">Tap anywhere on the document to place it</span>
+  <button id="cancelPlacing">Cancel</button>
+</div>
+
+<div id="toastContainer" aria-live="polite"></div>
+
+<div id="loadingOverlay"><div class="spinner"></div><div class="msg" id="loadingMsg">Working…</div></div>
+
+<input type="file" id="fileInput" accept=".pdf,.docx" style="display:none;">
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- globals / config ---------------- */
+  if (window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+  const TARGET_RENDER_WIDTH = 1100;
+
+  const state = {
+    fileType:null,
+    fileName:"",
+    pdfDoc:null,
+    pdfBytesForExport:null,
+    pages:[],          // {wrap, canvas, layer, pdfW, pdfH}
+    signing:false,
+    signature:{
+      mode:"draw",
+      includeName:false,
+      includeDate:false,
+      signerName:"",
+      dateMode:"today",
+      manualDate:"",
+      importedDataUrl:"",
+      importedImage:null,
+      penColor:"#10192B",
+      penWidth:2.5,
+      typedText:"",
+      typedFont:"Sacramento",
+      typedColor:"#10192B",
+    },
+    placing:null,       // {kind:'signature'|'date'}
+    placed:[],          // {id,kind,target,pageIndex,xPct,yPct,wPct,hPct,dataUrl,aspect}
+    idSeq:1,
+  };
+
+  /* ---------------- helpers ---------------- */
+  const $ = (sel,root)=> (root||document).querySelector(sel);
+  const $$ = (sel,root)=> Array.from((root||document).querySelectorAll(sel));
+
+  function showToast(msg, type){
+    const c = $("#toastContainer");
+    const el = document.createElement("div");
+    el.className = "toast" + (type? " "+type : "");
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(()=>{ el.style.opacity="0"; el.style.transition="opacity .25s"; setTimeout(()=>el.remove(),260); }, 3600);
+  }
+  function showLoading(msg){
+    $("#loadingMsg").textContent = msg || "Working…";
+    $("#loadingOverlay").classList.add("show");
+  }
+  function hideLoading(){ $("#loadingOverlay").classList.remove("show"); }
+
+  function todayISO(){
+    const d = new Date();
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    return d.getFullYear()+"-"+m+"-"+day;
+  }
+  function formatDateNice(iso){
+    if(!iso) return "";
+    const [y,m,d] = iso.split("-").map(Number);
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString(undefined, {day:"2-digit", month:"short", year:"numeric"});
+  }
+
+  /* ---------------- init small UI wiring ---------------- */
+  $("#manualDateValue").value = todayISO();
+  state.signature.manualDate = todayISO();
+
+  /* file input / dropzone */
+  const dropzone = $("#dropzone");
+  $("#browseBtn").addEventListener("click", ()=> $("#fileInput").click());
+  $("#replaceBtn").addEventListener("click", ()=> $("#fileInput").click());
+  $("#fileInput").addEventListener("change", (e)=>{
+    if(e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+    e.target.value = "";
+  });
+  ["dragenter","dragover"].forEach(evt=>{
+    dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); dropzone.classList.add("dragover"); });
+  });
+  ["dragleave","drop"].forEach(evt=>{
+    dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); dropzone.classList.remove("dragover"); });
+  });
+  dropzone.addEventListener("drop", (e)=>{
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) handleFile(f);
+  });
+
+  /* ---------------- file handling ---------------- */
+  function handleFile(file){
+    const name = file.name || "document";
+    const ext = name.split(".").pop().toLowerCase();
+    if(ext !== "pdf" && ext !== "docx"){
+      showToast("Please choose a .pdf or .docx file.", "error");
+      return;
+    }
+    resetDocument();
+    state.fileName = name;
+    showLoading(ext === "pdf" ? "Opening PDF…" : "Opening Word document…");
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const buf = ev.target.result;
+      if(ext === "pdf"){
+        state.fileType = "pdf";
+        loadPdf(buf.slice(0)).then(()=>{
+          state.pdfBytesForExport = buf.slice(0);
+          onDocumentReady();
+        }).catch(err=>{
+          console.error(err);
+          hideLoading();
+          showToast("Couldn't open that PDF. It may be encrypted or corrupted.", "error");
+        });
+      } else {
+        state.fileType = "docx";
+        loadDocx(buf).then(()=>{
+          onDocumentReady();
+        }).catch(err=>{
+          console.error(err);
+          hideLoading();
+          showToast("Couldn't read that Word document.", "error");
+        });
+      }
+    };
+    reader.onerror = function(){
+      hideLoading();
+      showToast("Couldn't read the file.", "error");
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function resetDocument(){
+    state.pdfDoc = null;
+    state.pdfBytesForExport = null;
+    state.pages = [];
+    state.placed = [];
+    state.placing = null;
+    $("#pdfPages").innerHTML = "";
+    $("#docPage").innerHTML = "";
+    hidePlacingBanner();
+    updatePlacedUI();
+  }
+
+  function onDocumentReady(){
+    hideLoading();
+    $("#dropzone").style.display = "none";
+    $("#docStatus").style.display = "flex";
+    $("#fnameLabel").textContent = state.fileName;
+    $("#statusChip").textContent = "Not signed";
+    $("#statusChip").className = "chip chip-neutral";
+    $("#replaceBtn").style.display = "inline-flex";
+    $("#exportBtn").style.display = "inline-flex";
+    if(state.fileType === "pdf"){
+      $("#pdfPages").style.display = "flex";
+      $("#pdfPages").style.flexDirection = "column";
+      $("#pdfPages").style.gap = "22px";
+      $("#docxWrap").style.display = "none";
+    } else {
+      $("#docxWrap").style.display = "block";
+      $("#pdfPages").style.display = "none";
+    }
+  }
+
+  /* ---------------- PDF rendering ---------------- */
+  async function loadPdf(arrayBuffer){
+    const loadingTask = pdfjsLib.getDocument({data:arrayBuffer});
+    const pdf = await loadingTask.promise;
+    state.pdfDoc = pdf;
+    const container = $("#pdfPages");
+    container.innerHTML = "";
+    state.pages = [];
+    for(let i=1;i<=pdf.numPages;i++){
+      const page = await pdf.getPage(i);
+      const viewport1 = page.getViewport({scale:1});
+      const scale = TARGET_RENDER_WIDTH / viewport1.width;
+      const viewport = page.getViewport({scale});
+
+      const wrap = document.createElement("div");
+      wrap.className = "pdf-page";
+      wrap.dataset.pageIndex = String(i-1);
+
+      const label = document.createElement("div");
+      label.className = "page-label";
+      label.textContent = "Page " + i + " of " + pdf.numPages;
+      wrap.appendChild(label);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      wrap.appendChild(canvas);
+
+      const layer = document.createElement("div");
+      layer.className = "sig-layer";
+      wrap.appendChild(layer);
+
+      container.appendChild(wrap);
+
+      const ctx = canvas.getContext("2d");
+      await page.render({canvasContext:ctx, viewport:viewport}).promise;
+
+      state.pages.push({
+        wrap, canvas, layer,
+        pdfW: viewport1.width,
+        pdfH: viewport1.height,
+      });
+    }
+  }
+
+  /* ---------------- DOCX rendering ---------------- */
+  function loadDocx(arrayBuffer){
+    return mammoth.convertToHtml({arrayBuffer:arrayBuffer})
+      .then(function(result){
+        const target = $("#docPage");
+        target.innerHTML = result.value || "<p><em>(empty document)</em></p>";
+        if(result.messages && result.messages.length){
+          console.warn("mammoth messages:", result.messages);
+        }
+      });
+  }
+
+  /* ---------------- signature pad (draw) ---------------- */
+  const sigPad = $("#sigPad");
+  const sigCtx = sigPad.getContext("2d");
+  let padHasInk = false;
+  let drawing = false;
+  let lastPt = null;
+
+  function resizePad(){
+    const rect = sigPad.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const prevData = padHasInk ? sigPad.toDataURL() : null;
+    sigPad.width = Math.round(rect.width * dpr);
+    sigPad.height = Math.round(rect.height * dpr);
+    sigCtx.scale(dpr, dpr);
+    sigCtx.lineCap = "round";
+    sigCtx.lineJoin = "round";
+    if(prevData){
+      const img = new Image();
+      img.onload = ()=> sigCtx.drawImage(img,0,0, rect.width, rect.height);
+      img.src = prevData;
+    }
+  }
+  window.addEventListener("resize", debounce(resizePad, 200));
+  setTimeout(resizePad, 30);
+
+  function padPoint(e){
+    const rect = sigPad.getBoundingClientRect();
+    return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+  }
+  sigPad.addEventListener("pointerdown", (e)=>{
+    drawing = true;
+    padHasInk = true;
+    sigPad.setPointerCapture(e.pointerId);
+    lastPt = padPoint(e);
+  });
+  sigPad.addEventListener("pointermove", (e)=>{
+    if(!drawing) return;
+    const p = padPoint(e);
+    sigCtx.strokeStyle = state.signature.penColor;
+    sigCtx.lineWidth = state.signature.penWidth;
+    sigCtx.beginPath();
+    sigCtx.moveTo(lastPt.x, lastPt.y);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+    lastPt = p;
+  });
+  ["pointerup","pointerleave","pointercancel"].forEach(evt=>{
+    sigPad.addEventListener(evt, ()=> drawing = false);
+  });
+
+  $("#clearPad").addEventListener("click", ()=>{
+    const rect = sigPad.getBoundingClientRect();
+    sigCtx.clearRect(0,0,rect.width,rect.height);
+    padHasInk = false;
+  });
+  $$("#penSwatches .swatch").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      $$("#penSwatches .swatch").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      state.signature.penColor = btn.dataset.color;
+    });
+  });
+  $("#penWidth").addEventListener("input", (e)=>{
+    state.signature.penWidth = parseFloat(e.target.value);
+  });
+
+  /* ---------------- typed signature ---------------- */
+  const typedName = $("#typedName");
+  const typedFontSel = $("#typedFont");
+  const typedPreviewText = $("#typedPreviewText");
+  function refreshTypedPreview(){
+    const txt = typedName.value.trim() || "Your signature";
+    typedPreviewText.textContent = txt;
+    typedPreviewText.style.fontFamily = "'" + typedFontSel.value + "', cursive";
+    typedPreviewText.style.color = state.signature.typedColor;
+    state.signature.typedText = typedName.value.trim();
+    state.signature.typedFont = typedFontSel.value;
+  }
+  typedName.addEventListener("input", refreshTypedPreview);
+  typedFontSel.addEventListener("change", refreshTypedPreview);
+  $$("#typeSwatches .swatch").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      $$("#typeSwatches .swatch").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      state.signature.typedColor = btn.dataset.color;
+      refreshTypedPreview();
+    });
+  });
+
+  /* ---------------- subtabs (draw/type) ---------------- */
+  $$(".subtab").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      $$(".subtab").forEach(t=>t.classList.remove("active"));
+      $$(".subpanel").forEach(p=>p.classList.remove("active"));
+      tab.classList.add("active");
+      $("#sub-"+tab.dataset.sub).classList.add("active");
+      state.signature.mode = tab.dataset.sub;
+      if(tab.dataset.sub === "draw") setTimeout(resizePad, 10);
+    });
+  });
+
+  /* ---------------- signature options + imported signature ---------------- */
+  const SIGNATURE_STORAGE_KEY = "eSignature.savedSignature.v2";
+  const SIGNER_NAME_STORAGE_KEY = "eSignature.signerName.v2";
+  const includeName = $("#includeName");
+  const includeDate = $("#includeDate");
+  const signerName = $("#signerName");
+  const manualDateValue = $("#manualDateValue");
+  const signatureImageInput = $("#signatureImageInput");
+  const importedSignaturePreview = $("#importedSignaturePreview");
+  const importSignatureEmpty = $("#importSignatureEmpty");
+  const removeSavedSignatureBtn = $("#removeSavedSignatureBtn");
+
+  try{ signerName.value = localStorage.getItem(SIGNER_NAME_STORAGE_KEY) || ""; }catch(_e){}
+  state.signature.signerName = signerName.value.trim();
+
+  includeName.addEventListener("change", ()=>{
+    state.signature.includeName = includeName.checked;
+    $("#nameOptions").style.display = includeName.checked ? "block" : "none";
+  });
+  includeDate.addEventListener("change", ()=>{
+    state.signature.includeDate = includeDate.checked;
+    $("#dateOptions").style.display = includeDate.checked ? "block" : "none";
+  });
+  signerName.addEventListener("input", ()=>{
+    state.signature.signerName = signerName.value.trim();
+    try{ localStorage.setItem(SIGNER_NAME_STORAGE_KEY, signerName.value); }catch(_e){}
+  });
+  $$('input[name="dateMode"]').forEach(r=>r.addEventListener("change", ()=>{
+    state.signature.dateMode = r.value;
+    $("#manualDateWrap").style.display = state.signature.dateMode === "manual" ? "block" : "none";
+  }));
+  manualDateValue.addEventListener("change", ()=> state.signature.manualDate = manualDateValue.value);
+
+  function cleanSignaturePhoto(img){
+    const maxDim = 1400;
+    const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+    const w = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+    const h = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+    const c = document.createElement("canvas"); c.width=w; c.height=h;
+    const ctx = c.getContext("2d", {willReadFrequently:true});
+    ctx.drawImage(img,0,0,w,h);
+    const im = ctx.getImageData(0,0,w,h), d=im.data;
+    for(let i=0;i<d.length;i+=4){
+      const r=d[i], g=d[i+1], b=d[i+2], a=d[i+3];
+      if(a<8){ d[i+3]=0; continue; }
+      const avg=(r+g+b)/3, spread=Math.max(r,g,b)-Math.min(r,g,b);
+      if(avg>242 || (avg>220 && spread<18)){ d[i+3]=0; continue; }
+      const darkness=Math.max(0,255-avg);
+      d[i]=16; d[i+1]=25; d[i+2]=43;
+      d[i+3]=Math.max(125,Math.min(255,Math.round(darkness*1.9)));
+    }
+    ctx.putImageData(im,0,0);
+    return trimCanvas(c) || c;
+  }
+
+  function activateImportedSignatureMode(){
+    if(!state.signature.importedImage) return;
+    state.signature.mode = "import";
+    $$(".subtab").forEach(t=>t.classList.toggle("active", t.dataset.sub === "import"));
+    $$(".subpanel").forEach(p=>p.classList.remove("active"));
+    const importPanel = $("#sub-import");
+    if(importPanel) importPanel.classList.add("active");
+  }
+
+  function setImportedSignature(dataUrl, persist){
+    const img = new Image();
+    img.onload = ()=>{
+      state.signature.importedDataUrl = dataUrl;
+      state.signature.importedImage = img;
+      importedSignaturePreview.src = dataUrl;
+      importedSignaturePreview.style.display = "block";
+      importSignatureEmpty.style.display = "none";
+      removeSavedSignatureBtn.style.display = "inline-flex";
+      activateImportedSignatureMode();
+      if(persist){ try{ localStorage.setItem(SIGNATURE_STORAGE_KEY,dataUrl); }catch(_e){} }
+    };
+    img.onerror = ()=>showToast("Couldn't read that signature image.","error");
+    img.src = dataUrl;
+  }
+
+  try{
+    const saved = localStorage.getItem(SIGNATURE_STORAGE_KEY);
+    if(saved) setImportedSignature(saved,false);
+  }catch(_e){}
+
+  $("#chooseSignatureBtn").addEventListener("click", ()=>signatureImageInput.click());
+  signatureImageInput.addEventListener("change", e=>{
+    const file=e.target.files && e.target.files[0]; e.target.value="";
+    if(!file) return;
+    if(!/^image\/(png|jpeg|webp)$/i.test(file.type||"")){ showToast("Choose a PNG, JPG or WEBP image.","error"); return; }
+    const fr=new FileReader();
+    fr.onload=()=>{
+      const raw=new Image();
+      raw.onload=()=>{
+        const cleaned=cleanSignaturePhoto(raw);
+        setImportedSignature(cleaned.toDataURL("image/png"),true);
+        showToast("Signature extracted and saved in this browser.","success");
+      };
+      raw.onerror=()=>showToast("Couldn't process that signature photo.","error");
+      raw.src=fr.result;
+    };
+    fr.onerror=()=>showToast("Couldn't read that image.","error");
+    fr.readAsDataURL(file);
+  });
+  removeSavedSignatureBtn.addEventListener("click", ()=>{
+    state.signature.importedDataUrl=""; state.signature.importedImage=null;
+    importedSignaturePreview.removeAttribute("src"); importedSignaturePreview.style.display="none";
+    importSignatureEmpty.style.display="block"; removeSavedSignatureBtn.style.display="none";
+    try{ localStorage.removeItem(SIGNATURE_STORAGE_KEY); }catch(_e){}
+  });
+
+  /* ---------------- compose signature image ---------------- */
+  function trimCanvas(source){
+    const w = source.width, h = source.height;
+    const ctx = source.getContext("2d");
+    const data = ctx.getImageData(0,0,w,h).data;
+    let minX=w, minY=h, maxX=0, maxY=0, found=false;
+    for(let y=0;y<h;y+=2){
+      for(let x=0;x<w;x+=2){
+        const a = data[(y*w+x)*4+3];
+        if(a>10){
+          found=true;
+          if(x<minX)minX=x; if(x>maxX)maxX=x;
+          if(y<minY)minY=y; if(y>maxY)maxY=y;
+        }
+      }
+    }
+    if(!found) return null;
+    const pad = 6;
+    minX = Math.max(0,minX-pad); minY = Math.max(0,minY-pad);
+    maxX = Math.min(w,maxX+pad); maxY = Math.min(h,maxY+pad);
+    const tw = Math.max(1,maxX-minX), th = Math.max(1,maxY-minY);
+    const out = document.createElement("canvas");
+    out.width = tw; out.height = th;
+    out.getContext("2d").drawImage(source, minX,minY,tw,th, 0,0,tw,th);
+    return out;
+  }
+
+  function composeStamp(){
+    let src=null;
+    if(state.signature.mode==="draw"){
+      if(!padHasInk) return null;
+      src=trimCanvas(sigPad); if(!src) return null;
+    }else if(state.signature.mode==="type"){
+      const txt=(state.signature.typedText||"").trim(); if(!txt) return null;
+      const fs=86, mc=document.createElement("canvas").getContext("2d");
+      mc.font=fs+"px '"+state.signature.typedFont+"', cursive";
+      const c=document.createElement("canvas"); c.width=Math.ceil(mc.measureText(txt).width)+50; c.height=132;
+      const cctx=c.getContext("2d"); cctx.font=fs+"px '"+state.signature.typedFont+"', cursive"; cctx.fillStyle=state.signature.typedColor; cctx.textBaseline="middle"; cctx.fillText(txt,25,c.height/2);
+      src=trimCanvas(c)||c;
+    }else{
+      if(!state.signature.importedImage) return null;
+      src=state.signature.importedImage;
+    }
+    const sw=src.naturalWidth||src.width, sh=src.naturalHeight||src.height; if(!sw||!sh) return null;
+    const name=includeName.checked ? signerName.value.trim() : "";
+    const dateIso=includeDate.checked ? (state.signature.dateMode==="manual" ? manualDateValue.value : todayISO()) : "";
+    if(includeName.checked && !name){ showToast("Enter the signer name or untick Include Name.","error"); return null; }
+    if(includeDate.checked && !dateIso){ showToast("Choose a date or use Today.","error"); return null; }
+    const dateText=dateIso ? formatDateNice(dateIso) : "";
+
+    const scale=Math.min(1,520/sw), dw=Math.max(165,Math.round(sw*scale)), dh=Math.max(58,Math.round(sh*scale));
+    const labelRail=58;
+    const contentPad=22;
+    const contentW=Math.max(235,dw+contentPad*2);
+    const W=labelRail+contentW;
+    const H=28+dh+18+(name?28:0)+(dateText?22:0)+18;
+    const out=document.createElement("canvas"); out.width=W; out.height=H;
+    const ctx=out.getContext("2d");
+
+    /* professional compact signature frame */
+    roundRect(ctx,1.5,1.5,W-3,H-3,12);
+    ctx.fillStyle="#FFFFFF";
+    ctx.fill();
+    ctx.strokeStyle="#C8CED5";
+    ctx.lineWidth=1.2;
+    ctx.stroke();
+
+    /* left verification rail */
+    ctx.strokeStyle="#D7DCE1";
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(labelRail,16);
+    ctx.lineTo(labelRail,H-16);
+    ctx.stroke();
+
+    /* clear verification label: solid light green, not a watermark */
+    ctx.save();
+    ctx.translate(labelRail/2, H/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.globalAlpha=1;
+    ctx.fillStyle="#69B84A";
+    ctx.font="700 "+Math.max(12,Math.min(15,Math.round(H*0.05)))+"px 'IBM Plex Sans',sans-serif";
+    ctx.fillText("DIGITALLY SIGNED",0,0,H-34);
+    ctx.restore();
+
+    const contentCenter=labelRail + contentW/2;
+
+    /* signature itself */
+    ctx.drawImage(src,contentCenter-dw/2,24,dw,dh);
+
+    let y=24+dh+10;
+    if(name || dateText){
+      ctx.strokeStyle="#E0E4E8";
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(labelRail+18,y);
+      ctx.lineTo(W-18,y);
+      ctx.stroke();
+      y+=9;
+    }
+
+    ctx.textAlign="center";
+    ctx.textBaseline="top";
+    if(name){
+      ctx.fillStyle="#203743";
+      ctx.font="700 20px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(name,contentCenter,y,contentW-30);
+      y+=28;
+    }
+    if(dateText){
+      ctx.fillStyle="#718096";
+      ctx.font="600 15px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(dateText,contentCenter,y,contentW-30);
+      y+=22;
+    }
+
+    return {dataUrl:out.toDataURL("image/png"),aspect:W/H};
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  /* ---------------- immediate placement flow ---------------- */
+  $("#placeSigBtn").addEventListener("click", ()=>{
+    if(!state.fileType){ showToast("Import a document first.","error"); return; }
+
+    /* If a signature photo is loaded, use it automatically.
+       Never ask the user to draw a signature first. */
+    if(state.signature.importedImage){
+      activateImportedSignatureMode();
+    }
+
+    const stamp=composeStamp();
+    if(!stamp){
+      const msg=state.signature.importedImage ? "Couldn't prepare the imported signature. Please reload the image." : (state.signature.mode==="draw" ? "Draw a signature first." : state.signature.mode==="type" ? "Type your signature first." : "Import a signature photo first.");
+      showToast(msg,"error"); return;
+    }
+    if(state.fileType==="pdf"){
+      if(!state.pages.length){ showToast("The PDF is still loading.","error"); return; }
+      const vr=$("#viewerPane").getBoundingClientRect(); let best=0,bestArea=-1;
+      state.pages.forEach((pg,i)=>{ const r=pg.wrap.getBoundingClientRect(); const ow=Math.max(0,Math.min(r.right,vr.right)-Math.max(r.left,vr.left)); const oh=Math.max(0,Math.min(r.bottom,vr.bottom)-Math.max(r.top,vr.top)); const a=ow*oh; if(a>bestArea){bestArea=a;best=i;} });
+      placeStampOnPdf(best,.58,.62,"signature",stamp);
+    }else{
+      placeStampOnDocx(.58,.62,"signature",stamp);
+    }
+    closeDrawer(); showToast("Signature inserted. Drag it to position it.","success");
+  });
+  function startPlacing(){}
+  function stopPlacing(){ state.placing=null; $("#viewerPane").classList.remove("placing"); hidePlacingBanner(); }
+  $("#cancelPlacing").addEventListener("click", stopPlacing);
+
+  function startPlacing(kind, stamp){
+    state.placing = {kind, stamp};
+    $("#viewerPane").classList.add("placing");
+    $("#placingBannerText").textContent = "Tap anywhere on the document to place it";
+    $("#placingBanner").classList.add("show");
+    closeDrawer();
+  }
+  function stopPlacing(){
+    state.placing = null;
+    $("#viewerPane").classList.remove("placing");
+    hidePlacingBanner();
+  }
+  function hidePlacingBanner(){ $("#placingBanner").classList.remove("show"); }
+
+  $("#viewerPane").addEventListener("click", function(e){
+    if(!state.placing) return;
+    if(state.fileType === "pdf"){
+      const pageEl = e.target.closest(".pdf-page");
+      if(!pageEl) return;
+      const idx = parseInt(pageEl.dataset.pageIndex,10);
+      const rect = pageEl.getBoundingClientRect();
+      const xPct = (e.clientX - rect.left) / rect.width;
+      const yPct = (e.clientY - rect.top) / rect.height;
+      placeStampOnPdf(idx, xPct, yPct, state.placing.kind, state.placing.stamp);
+    } else if(state.fileType === "docx"){
+      const pageEl = $("#docPage");
+      if(!pageEl.contains(e.target) && e.target !== pageEl) return;
+      const rect = pageEl.getBoundingClientRect();
+      const xPct = (e.clientX - rect.left) / rect.width;
+      const yPct = (e.clientY - rect.top) / rect.height;
+      placeStampOnDocx(xPct, yPct, state.placing.kind, state.placing.stamp);
+    }
+    stopPlacing();
+  });
+
+  function defaultSizeFor(kind, aspect, containerW, containerH){
+    const wPct=0.24, wPx=containerW*wPct, hPx=wPx/aspect;
+    return {wPct:wPct,hPct:hPx/containerH};
+  }
+
+  function placeStampOnPdf(pageIndex, xPct, yPct, kind, stamp){
+    const pg = state.pages[pageIndex];
+    if(!pg) return;
+    const rect = pg.wrap.getBoundingClientRect();
+    const size = defaultSizeFor(kind, stamp.aspect, rect.width, rect.height);
+    const entry = {
+      id: state.idSeq++,
+      kind, target:"pdf", pageIndex,
+      xPct: clamp01(xPct - size.wPct/2),
+      yPct: clamp01(yPct - size.hPct/2),
+      wPct: size.wPct, hPct: size.hPct,
+      dataUrl: stamp.dataUrl, aspect: stamp.aspect,
+    };
+    state.placed.push(entry);
+    renderPlacedEl(entry, pg.layer, ()=> pg.wrap.getBoundingClientRect());
+    updatePlacedUI();
+  }
+
+  function placeStampOnDocx(xPct, yPct, kind, stamp){
+    const pageEl = $("#docPage");
+    const rect = pageEl.getBoundingClientRect();
+    const size = defaultSizeFor(kind, stamp.aspect, rect.width, rect.height);
+    const entry = {
+      id: state.idSeq++,
+      kind, target:"docx", pageIndex:0,
+      xPct: clamp01(xPct - size.wPct/2),
+      yPct: clamp01(yPct - size.hPct/2),
+      wPct: size.wPct, hPct: size.hPct,
+      dataUrl: stamp.dataUrl, aspect: stamp.aspect,
+    };
+    state.placed.push(entry);
+    renderPlacedEl(entry, pageEl, ()=> pageEl.getBoundingClientRect());
+    updatePlacedUI();
+  }
+
+  function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+  function renderPlacedEl(entry, parentEl, getParentRect){
+    const el = document.createElement("div");
+    el.className = "placed";
+    el.dataset.id = entry.id;
+    el.style.left = (entry.xPct*100)+"%";
+    el.style.top = (entry.yPct*100)+"%";
+    el.style.width = (entry.wPct*100)+"%";
+    el.style.height = (entry.hPct*100)+"%";
+
+    const img = document.createElement("img");
+    img.src = entry.dataUrl;
+    img.draggable = false;
+    el.appendChild(img);
+
+    const del = document.createElement("button");
+    del.className = "placed-del";
+    del.innerHTML = "&times;";
+    del.title = "Remove";
+    function removePlacedEntry(ev){
+      if(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+      }
+      dragging = false;
+      resizing = false;
+      if(entry._el && entry._el.parentNode) entry._el.remove();
+      state.placed = state.placed.filter(p=>p.id!==entry.id);
+      updatePlacedUI();
+    }
+    del.addEventListener("pointerdown", (ev)=>{
+      ev.preventDefault();
+      ev.stopPropagation();
+    });
+    del.addEventListener("click", removePlacedEntry);
+    el.appendChild(del);
+
+    const handle = document.createElement("div");
+    handle.className = "placed-handle";
+    el.appendChild(handle);
+
+    parentEl.appendChild(el);
+    entry._el = el;
+
+    /* drag */
+    let dragging=false, startX=0, startY=0, startLeftPct=0, startTopPct=0;
+    el.addEventListener("pointerdown",(e)=>{
+      if(e.target===handle || e.target===del || e.target.closest(".placed-del")) return;
+      dragging = true;
+      el.classList.add("dragging","active");
+      el.setPointerCapture(e.pointerId);
+      startX=e.clientX; startY=e.clientY;
+      startLeftPct = entry.xPct; startTopPct = entry.yPct;
+    });
+    el.addEventListener("pointermove",(e)=>{
+      if(!dragging) return;
+      const r = getParentRect();
+      const dxPct = (e.clientX-startX)/r.width;
+      const dyPct = (e.clientY-startY)/r.height;
+      entry.xPct = clamp01(startLeftPct+dxPct);
+      entry.yPct = clamp01(startTopPct+dyPct);
+      el.style.left = (entry.xPct*100)+"%";
+      el.style.top = (entry.yPct*100)+"%";
+    });
+    ["pointerup","pointercancel"].forEach(evt=>{
+      el.addEventListener(evt,()=>{ dragging=false; el.classList.remove("dragging"); });
+    });
+
+    /* resize (maintain aspect) */
+    let resizing=false, rStartX=0, rStartW=0, rStartH=0;
+    handle.addEventListener("pointerdown",(e)=>{
+      e.stopPropagation();
+      resizing = true;
+      handle.setPointerCapture(e.pointerId);
+      rStartX = e.clientX;
+      rStartW = entry.wPct; rStartH = entry.hPct;
+    });
+    handle.addEventListener("pointermove",(e)=>{
+      if(!resizing) return;
+      const r = getParentRect();
+      const dxPct = (e.clientX-rStartX)/r.width;
+      let newW = Math.max(0.03, rStartW + dxPct);
+      let newH = newW * (r.width/entry.aspect) / r.height;
+      entry.wPct = newW; entry.hPct = newH;
+      el.style.width = (entry.wPct*100)+"%";
+      el.style.height = (entry.hPct*100)+"%";
+    });
+    ["pointerup","pointercancel"].forEach(evt=>{
+      handle.addEventListener(evt,()=> resizing=false);
+    });
+
+    el.addEventListener("pointerdown", ()=>{
+      $$(".placed.active").forEach(p=>p.classList.remove("active"));
+      el.classList.add("active");
+    });
+  }
+
+  function updatePlacedUI(){
+    const clearBtn=$("#clearAllBtn");
+    if(clearBtn) clearBtn.style.display=state.placed.length ? "flex" : "none";
+    if(state.placed.length){ $("#statusChip").textContent="Ready to export"; $("#statusChip").className="chip chip-ok"; }
+    else if(state.fileType){ $("#statusChip").textContent="Not signed"; $("#statusChip").className="chip chip-neutral"; }
+  }
+  $("#clearAllBtn").addEventListener("click", ()=>{
+    state.placed.forEach(p=>{ if(p._el) p._el.remove(); });
+    state.placed = [];
+    updatePlacedUI();
+  });
+
+  /* ---------------- mobile drawer ---------------- */
+  const toolsPane = $("#toolsPane");
+  function openDrawer(){ toolsPane.classList.add("open"); $("#drawerScrim").classList.add("show"); }
+  function closeDrawer(){
+    if(window.innerWidth<=900){
+      toolsPane.classList.remove("open");
+      $("#drawerScrim").classList.remove("show");
+    }
+  }
+  $("#mobileFab").addEventListener("click", openDrawer);
+  $("#drawerScrim").addEventListener("click", closeDrawer);
+  $("#drawerHandle").addEventListener("click", closeDrawer);
+
+  /* ---------------- export ---------------- */
+  $("#exportBtn").addEventListener("click", async function(){
+    if(!state.fileType){ return; }
+    if(state.placed.length===0){
+      const proceed = true; // no native confirm blocking; just warn via toast and continue
+      showToast("Exporting without any placed signature or stamp.", "");
+    }
+    try{
+      if(state.fileType === "pdf"){
+        await exportPdf();
+      } else {
+        await exportDocxAsPdf();
+      }
+    }catch(err){
+      console.error(err);
+      hideLoading();
+      showToast("Export failed: " + (err && err.message ? err.message : "unknown error"), "error");
+    }
+  });
+
+  async function exportPdf(){
+    showLoading("Preparing signed PDF…");
+    const { PDFDocument } = PDFLib;
+    const pdfDoc = await PDFDocument.load(state.pdfBytesForExport.slice(0));
+    const pages = pdfDoc.getPages();
+
+    for(const entry of state.placed){
+      const page = pages[entry.pageIndex];
+      if(!page) continue;
+      const { width, height } = page.getSize();
+      const pngBytes = dataUrlToBytes(entry.dataUrl);
+      const pngImage = await pdfDoc.embedPng(pngBytes);
+      const wPts = entry.wPct * width;
+      const hPts = entry.hPct * height;
+      const xPts = entry.xPct * width;
+      const yPts = height - (entry.yPct * height) - hPts;
+      page.drawImage(pngImage, {x:xPts, y:yPts, width:wPts, height:hPts});
+    }
+
+    const outBytes = await pdfDoc.save();
+    downloadBlob(new Blob([outBytes], {type:"application/pdf"}), signedFileName(".pdf"));
+    hideLoading();
+    showToast("Signed PDF downloaded.", "success");
+    markExported();
+  }
+
+  async function exportDocxAsPdf(){
+    showLoading("Rendering document…");
+    const target = $("#docPage");
+    const canvas = await html2canvas(target, {scale:2, useCORS:true, backgroundColor:"#ffffff"});
+    showLoading("Building PDF…");
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({unit:"pt", format:"a4"});
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    const imgW = pageW;
+    const imgH = (canvas.height * imgW) / canvas.width;
+
+    let heightLeft = imgH;
+    let position = 0;
+    const imgData = canvas.toDataURL("image/jpeg", 0.95);
+
+    pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+    heightLeft -= pageH;
+
+    while(heightLeft > 0){
+      position = heightLeft - imgH;
+      pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+    }
+
+    pdf.save(signedFileName(".pdf"));
+    hideLoading();
+    showToast("Signed PDF downloaded.", "success");
+    markExported();
+  }
+
+  function markExported(){
+    $("#statusChip").textContent = "Exported";
+    $("#statusChip").className = "chip chip-ok";
+  }
+
+  function signedFileName(ext){
+    const base = state.fileName.replace(/\.[^.]+$/, "");
+    return "signed-" + base + ext;
+  }
+  function dataUrlToBytes(dataUrl){
+    const base64 = dataUrl.split(",")[1];
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for(let i=0;i<len;i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+  }
+  function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 4000);
+  }
+
+  function debounce(fn, ms){
+    let t;
+    return function(){ clearTimeout(t); t = setTimeout(fn, ms); };
+  }
+
+  refreshTypedPreview();
+})();
+</script>
+</body>
+</html>
