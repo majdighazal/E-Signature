@@ -1787,13 +1787,9 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     const contentW   = Math.max(170, dw + contentPad*2);
     const W = labelRail + contentW + dateRail;
 
-    /* Final vertical-label sizing: both labels are true 22px bold with no shrink scaling. */
-    const labelMeasure = document.createElement("canvas").getContext("2d");
-    labelMeasure.font = "700 22px 'IBM Plex Sans',sans-serif";
-    const signedLabelHeight = Math.ceil(labelMeasure.measureText("DIGITALLY SIGNED").width) + 24;
-    const dateLabelHeight = dateText ? Math.ceil(labelMeasure.measureText(dateText).width) + 24 : 0;
+    /* Keep the frame driven by the signature itself, not by the length of vertical labels. */
     const baseH = topPad + dh + gapAfterSig + nameH + bottomPad;
-    const H = Math.max(baseH, signedLabelHeight, dateLabelHeight, 112);
+    const H = Math.max(baseH, 112);
 
     const out = document.createElement("canvas");
     out.width = W; out.height = H;
@@ -1833,11 +1829,11 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#3E9B4F";
 
-    ctx.font = "700 22px 'IBM Plex Sans',sans-serif";
-    ctx.fillText("DIGITALLY SIGNED", 0, 0);
+    ctx.font = "700 18px 'IBM Plex Sans',sans-serif";
+    ctx.fillText("DIGITALLY SIGNED", 0, 0, Math.max(54, H - 24));
     ctx.restore();
 
-    /* ===== date on right rail: exactly 22px bold, vertical ===== */
+    /* ===== date on right rail: exactly 18px bold, vertical ===== */
     if(dateText){
       ctx.save();
       ctx.translate(W - dateRail/2, H/2);
@@ -1846,8 +1842,8 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
       ctx.textBaseline = "middle";
       ctx.globalAlpha = 1;
       ctx.fillStyle = "#4B5563";
-      ctx.font = "700 22px 'IBM Plex Sans',sans-serif";
-      ctx.fillText(dateText, 0, 0);
+      ctx.font = "700 18px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(dateText, 0, 0, Math.max(54, H - 24));
       ctx.restore();
     }
 
