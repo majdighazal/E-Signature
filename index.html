@@ -852,7 +852,9 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   .signing-title{font-size:22px;}
   .signing-kicker{font-size:9.5px;}
   .import-signature-box{min-height:132px;}
-  #sigPad{height:150px;}
+  /* --- taller drawing tray on phones --- */
+  #sigPad{height:280px;}
+  .pad-wrap{min-height:280px;}
   .dropzone{padding:40px 20px; margin-top:3vh;}
   .dropzone h1{font-size:17.5px;}
   .doc-status{font-size:12px;}
@@ -943,7 +945,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
                 <button class="swatch" style="background:#7A1F1F" data-color="#7A1F1F" title="Maroon"></button>
                 <button class="swatch" style="background:#000000" data-color="#000000" title="Black"></button>
               </div>
-              <input type="range" id="penWidth" min="1" max="5" step="0.5" value="2.5" title="Pen thickness">
+              <input type="range" id="penWidth" min="1" max="6" step="0.5" value="3.5" title="Pen thickness">
               <button class="btn btn-ghost btn-sm" id="clearPad">Clear</button>
             </div>
           </div>
@@ -1100,7 +1102,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
       importedColor:"original",
       importedThickness:0,
       penColor:"#10192B",
-      penWidth:2.5,
+      penWidth:3.5,               /* medium default — matches the slider */
       typedText:"",
       typedFont:"Sacramento",
       typedColor:"#10192B",
@@ -1749,34 +1751,41 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     if(includeDate.checked && !dateIso){ showToast("Choose a date or use Today.","error"); return null; }
     const dateText = dateIso ? formatDateNice(dateIso) : "";
 
-    const scale = Math.min(1, 520/sw);
-    const dw = Math.max(165, Math.round(sw*scale));
-    const dh = Math.max(58,  Math.round(sh*scale));
+    /* ---- NARROWER FRAME ---- */
+    const scale = Math.min(1, 360/sw);
+    const dw = Math.max(120, Math.round(sw*scale));
+    const dh = Math.max(48,  Math.round(sh*scale));
 
-    const labelRail  = 58; // Reduced from 78 to tighten the stamp
-    const contentPad = 22;
-    const contentW   = Math.max(240, dw + contentPad*2);
+    const topPad = 12;
+    const gapAfterSig = 8;
+    const nameH = name ? 24 : 0;
+    const dateH = dateText ? 18 : 0;
+    const bottomPad = 10;
+
+    const labelRail  = 44;
+    const contentPad = 10;
+    const contentW   = Math.max(170, dw + contentPad*2);
     const W = labelRail + contentW;
-    const H = Math.max(190, 28 + dh + 18 + (name?28:0) + (dateText?22:0) + 18);
+    const H = topPad + dh + gapAfterSig + nameH + dateH + bottomPad;
 
     const out = document.createElement("canvas");
     out.width = W; out.height = H;
     const ctx = out.getContext("2d");
 
-    /* frame */
-    roundRect(ctx, 1.5, 1.5, W-3, H-3, 12);
+    /* frame - very thin and light grey */
+    roundRect(ctx, 0.5, 0.5, W-1, H-1, 10);
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
-    ctx.strokeStyle = "#C8CED5";
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "#EAEAEA";
+    ctx.lineWidth = 0.8;
     ctx.stroke();
 
     /* left verification rail divider */
-    ctx.strokeStyle = "#D7DCE1";
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#EAEAEA";
+    ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.moveTo(labelRail, 16);
-    ctx.lineTo(labelRail, H-16);
+    ctx.moveTo(labelRail, 10);
+    ctx.lineTo(labelRail, H-10);
     ctx.stroke();
 
     /* ===== "DIGITALLY SIGNED" label (single line, rotated) ===== */
@@ -1788,13 +1797,13 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#3E9B4F";
 
-    let railFont = Math.max(10, Math.min(15, Math.round(H * 0.055)));
+    let railFont = Math.max(9, Math.min(13, Math.round(H * 0.05)));
     ctx.font = "400 " + railFont + "px 'IBM Plex Sans',sans-serif";
     const labelText = "DIGITALLY SIGNED";
     const labelWidth = ctx.measureText(labelText).width;
-    const railAvail = H - 20;
+    const railAvail = H - 16;
     if(labelWidth > railAvail){
-      railFont = Math.max(8, Math.floor(railFont * railAvail / labelWidth));
+      railFont = Math.max(7, Math.floor(railFont * railAvail / labelWidth));
       ctx.font = "400 " + railFont + "px 'IBM Plex Sans',sans-serif";
     }
     ctx.fillText(labelText, 0, 0);
@@ -1803,32 +1812,32 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     const contentCenter = labelRail + contentW/2;
 
     /* signature itself */
-    ctx.drawImage(src, contentCenter - dw/2, 24, dw, dh);
+    ctx.drawImage(src, contentCenter - dw/2, topPad, dw, dh);
 
-    let y = 24 + dh + 10;
+    let y = topPad + dh + gapAfterSig;
     if(name || dateText){
-      ctx.strokeStyle = "#E0E4E8";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#EAEAEA";
+      ctx.lineWidth = 0.8;
       ctx.beginPath();
-      ctx.moveTo(labelRail + 18, y);
-      ctx.lineTo(W - 18, y);
+      ctx.moveTo(labelRail + 10, y);
+      ctx.lineTo(W - 10, y);
       ctx.stroke();
-      y += 9;
+      y += 7;
     }
 
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
     if(name){
       ctx.fillStyle = "#203743";
-      ctx.font = "700 20px 'IBM Plex Sans',sans-serif";
-      ctx.fillText(name, contentCenter, y, contentW-30);
-      y += 28;
+      ctx.font = "700 17px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(name, contentCenter, y, contentW-20);
+      y += nameH;
     }
     if(dateText){
       ctx.fillStyle = "#718096";
-      ctx.font = "600 15px 'IBM Plex Sans',sans-serif";
-      ctx.fillText(dateText, contentCenter, y, contentW-30);
-      y += 22;
+      ctx.font = "600 13px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(dateText, contentCenter, y, contentW-20);
+      y += dateH;
     }
 
     return {dataUrl: out.toDataURL("image/png"), aspect: W/H};
