@@ -391,13 +391,16 @@ img{max-width:100%;}
 .placed-handle{
   position:absolute;
   width:15px;height:15px;
-  right:-7px;bottom:-7px;
   background:var(--paper);
   border:1.5px solid var(--brass);
   border-radius:50%;
-  cursor:nwse-resize;
   touch-action:none;
+  z-index:7;
 }
+.placed-handle.nw{left:-7px;top:-7px;cursor:nwse-resize;}
+.placed-handle.ne{right:-7px;top:-7px;cursor:nesw-resize;}
+.placed-handle.sw{left:-7px;bottom:-7px;cursor:nesw-resize;}
+.placed-handle.se{right:-7px;bottom:-7px;cursor:nwse-resize;}
 .placed-del{
   position:absolute;
   top:-11px;right:-11px;
@@ -425,6 +428,7 @@ img{max-width:100%;}
 .exporting .placed{
   border-color:transparent !important;
   background:transparent !important;
+  box-shadow:none !important;
 }
 .exporting .placed-del,
 .exporting .placed-handle{display:none !important;}
@@ -621,6 +625,24 @@ select{cursor:pointer;}
   border: 1px solid var(--line);
   animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+/* Compact signature placement message */
+.placing-message.compact-place-message{
+  max-width:300px;
+  width:min(86vw,300px);
+  padding:18px 20px;
+  border-radius:14px;
+}
+.placing-message.compact-place-message h2{
+  margin:0 0 14px;
+  font-size:17px;
+  line-height:1.25;
+}
+.placing-message.compact-place-message .btn{
+  min-height:42px;
+  padding:9px 16px;
+}
+
 @keyframes popIn {
   from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
@@ -788,7 +810,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
 .options-card{border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.06);padding:14px;margin:2px 0 14px}.options-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:8px}.option-check{display:flex;align-items:center;gap:9px;padding:10px 2px;color:#fff;font-size:13px;font-weight:650}.option-check input{width:18px;height:18px;accent-color:var(--es-gold)}.option-expand{margin:0 0 8px 27px;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}.date-choice-row{display:flex;gap:16px;color:#e2eaf4;font-size:12px}.date-choice-row label{display:flex;align-items:center;gap:6px}.date-choice-row input{accent-color:var(--es-gold)}
 .insert-signature-btn{min-height:52px;font-size:16px;justify-content:center;gap:10px}.insert-help{font-size:11.5px;line-height:1.45;color:#aebdd0;text-align:center;margin-top:9px}
 .viewer-pane{background:radial-gradient(circle at 50% 0,#f7f9fc 0,#edf1f6 56%,#e5eaf0 100%);padding:30px 28px 100px}.pdf-page,.docx-page{box-shadow:0 2px 5px rgba(16,34,56,.06),0 18px 44px rgba(16,34,56,.13)}
-.placed{border:1.5px solid rgba(16,34,56,.28);border-radius:10px;background:rgba(255,255,255,.04);padding:5px;box-shadow:0 8px 20px rgba(16,34,56,.10)}.placed:hover,.placed.active{border-color:var(--es-gold);background:rgba(199,154,74,.06)}.placed-del{opacity:1!important;pointer-events:auto!important;top:-13px;right:-13px;width:29px;height:29px;border-radius:50%;background:#c93e34;color:#fff;border:2px solid #fff;font-size:18px;font-weight:800;box-shadow:0 6px 14px rgba(201,62,52,.28);z-index:8}.placed-handle{opacity:1!important;pointer-events:auto!important;width:18px;height:18px;right:-8px;bottom:-8px;border:2px solid #fff;box-shadow:0 4px 10px rgba(16,34,56,.20)}
+.placed{border:1.5px solid rgba(16,34,56,.28);border-radius:10px;background:transparent;padding:5px;box-shadow:none}.placed:hover,.placed.active{border-color:var(--es-gold);background:rgba(199,154,74,.06)}.placed-del{opacity:1!important;pointer-events:auto!important;top:-13px;right:-13px;width:29px;height:29px;border-radius:50%;background:#c93e34;color:#fff;border:2px solid #fff;font-size:18px;font-weight:800;box-shadow:0 6px 14px rgba(201,62,52,.28);z-index:8}.placed-handle{opacity:1!important;pointer-events:auto!important;width:18px;height:18px;border:2px solid #fff;box-shadow:0 4px 10px rgba(16,34,56,.20)}.placed-handle.nw{left:-8px;top:-8px;right:auto;bottom:auto}.placed-handle.ne{right:-8px;top:-8px;left:auto;bottom:auto}.placed-handle.sw{left:-8px;bottom:-8px;right:auto;top:auto}.placed-handle.se{right:-8px;bottom:-8px;left:auto;top:auto}
 
 @media(max-width:900px){.tools-pane{order:0;width:auto;flex:none;border-right:none;background:linear-gradient(180deg,#162b44,#0d1e32)}.viewer-pane{padding:18px 12px 100px}.signing-header{padding:15px 15px 6px}.tools-body{padding:10px 15px 24px}.brand-name small{display:none}}
 
@@ -1027,7 +1049,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M5 19h4L20 8a2.2 2.2 0 0 0-3.1-3.1L6 15.8 5 19Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m14.8 7 3.2 3.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             Insert Signature
           </button>
-          <div class="insert-help">Inserted immediately on the visible page. Drag to move, resize from the corner, or tap × to delete directly.</div>
+          <div class="insert-help">Inserted immediately on the visible page. Drag to move, resize freely from any of the 4 corners in both width and height, or tap × to delete directly.</div>
 
           <button class="btn btn-ghost btn-block" id="clearAllBtn" style="margin-top:10px;display:none;">Clear All Signatures</button>
           </div>
@@ -1052,10 +1074,8 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
 
 <!-- Centered placement overlay message -->
 <div class="placing-overlay" id="placingOverlay">
-  <div class="placing-message">
-    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M14 10l6.1-6.1M9 21H3v-6M10 14l-6.1 6.1"/></svg>
+  <div class="placing-message compact-place-message">
     <h2>Tap anywhere to place signature</h2>
-    <p>Position it on the document by tapping, then drag to adjust or resize from the corner.</p>
     <button class="btn btn-accent" id="cancelPlacing">Cancel</button>
   </div>
 </div>
@@ -1143,8 +1163,8 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   function formatDateNice(iso){
     if(!iso) return "";
     const [y,m,d] = iso.split("-").map(Number);
-    const dt = new Date(y, m-1, d);
-    return dt.toLocaleDateString(undefined, {day:"2-digit", month:"short", year:"numeric"});
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return String(d).padStart(2,"0") + "." + months[m-1] + "." + y;
   }
 
   /* ---------------- init small UI wiring ---------------- */
@@ -1757,26 +1777,34 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     const dh = Math.max(48,  Math.round(sh*scale));
 
     const topPad = 12;
-    const gapAfterSig = 8;
+    const gapAfterSig = 6;
     const nameH = name ? 24 : 0;
-    const dateH = dateText ? 18 : 0;
-    const bottomPad = 10;
+    const bottomPad = 8;
 
     const labelRail  = 44;
+    const dateRail   = dateText ? 44 : 0;
     const contentPad = 10;
     const contentW   = Math.max(170, dw + contentPad*2);
-    const W = labelRail + contentW;
-    const H = topPad + dh + gapAfterSig + nameH + dateH + bottomPad;
+    const W = labelRail + contentW + dateRail;
+
+    /* Final vertical-label sizing: both labels are true 22px bold with no shrink scaling. */
+    const labelMeasure = document.createElement("canvas").getContext("2d");
+    labelMeasure.font = "700 22px 'IBM Plex Sans',sans-serif";
+    const signedLabelHeight = Math.ceil(labelMeasure.measureText("DIGITALLY SIGNED").width) + 24;
+    const dateLabelHeight = dateText ? Math.ceil(labelMeasure.measureText(dateText).width) + 24 : 0;
+    const baseH = topPad + dh + gapAfterSig + nameH + bottomPad;
+    const H = Math.max(baseH, signedLabelHeight, dateLabelHeight, 112);
 
     const out = document.createElement("canvas");
     out.width = W; out.height = H;
     const ctx = out.getContext("2d");
 
-    /* frame - very thin and light grey */
+    /* transparent signature stamp: no white fill is baked into the signed document */
+    ctx.clearRect(0, 0, W, H);
+
+    /* keep only the subtle commercial frame over the transparent canvas */
     roundRect(ctx, 0.5, 0.5, W-1, H-1, 10);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fill();
-    ctx.strokeStyle = "#EAEAEA";
+    ctx.strokeStyle = "rgba(190, 196, 204, 0.62)";
     ctx.lineWidth = 0.8;
     ctx.stroke();
 
@@ -1788,6 +1816,14 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     ctx.lineTo(labelRail, H-10);
     ctx.stroke();
 
+    /* right date rail divider */
+    if(dateText){
+      ctx.beginPath();
+      ctx.moveTo(W - dateRail, 10);
+      ctx.lineTo(W - dateRail, H-10);
+      ctx.stroke();
+    }
+
     /* ===== "DIGITALLY SIGNED" label (single line, rotated) ===== */
     ctx.save();
     ctx.translate(labelRail/2, H/2);
@@ -1797,17 +1833,23 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     ctx.globalAlpha = 1;
     ctx.fillStyle = "#3E9B4F";
 
-    let railFont = Math.max(9, Math.min(13, Math.round(H * 0.05)));
-    ctx.font = "400 " + railFont + "px 'IBM Plex Sans',sans-serif";
-    const labelText = "DIGITALLY SIGNED";
-    const labelWidth = ctx.measureText(labelText).width;
-    const railAvail = H - 16;
-    if(labelWidth > railAvail){
-      railFont = Math.max(7, Math.floor(railFont * railAvail / labelWidth));
-      ctx.font = "400 " + railFont + "px 'IBM Plex Sans',sans-serif";
-    }
-    ctx.fillText(labelText, 0, 0);
+    ctx.font = "700 22px 'IBM Plex Sans',sans-serif";
+    ctx.fillText("DIGITALLY SIGNED", 0, 0);
     ctx.restore();
+
+    /* ===== date on right rail: exactly 22px bold, vertical ===== */
+    if(dateText){
+      ctx.save();
+      ctx.translate(W - dateRail/2, H/2);
+      ctx.rotate(Math.PI/2);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "#4B5563";
+      ctx.font = "700 22px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(dateText, 0, 0);
+      ctx.restore();
+    }
 
     const contentCenter = labelRail + contentW/2;
 
@@ -1815,29 +1857,22 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     ctx.drawImage(src, contentCenter - dw/2, topPad, dw, dh);
 
     let y = topPad + dh + gapAfterSig;
-    if(name || dateText){
+
+    if(name){
       ctx.strokeStyle = "#EAEAEA";
       ctx.lineWidth = 0.8;
       ctx.beginPath();
       ctx.moveTo(labelRail + 10, y);
-      ctx.lineTo(W - 10, y);
+      ctx.lineTo(W - dateRail - 10, y);
       ctx.stroke();
-      y += 7;
-    }
+      y += 5;
 
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    if(name){
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
       ctx.fillStyle = "#203743";
       ctx.font = "700 17px 'IBM Plex Sans',sans-serif";
       ctx.fillText(name, contentCenter, y, contentW-20);
       y += nameH;
-    }
-    if(dateText){
-      ctx.fillStyle = "#718096";
-      ctx.font = "600 13px 'IBM Plex Sans',sans-serif";
-      ctx.fillText(dateText, contentCenter, y, contentW-20);
-      y += dateH;
     }
 
     return {dataUrl: out.toDataURL("image/png"), aspect: W/H};
@@ -1916,7 +1951,21 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   });
 
   function defaultSizeFor(kind, aspect, containerW, containerH){
-    const wPct = 0.24, wPx = containerW*wPct, hPx = wPx/aspect;
+    /* Signature sections such as 4-column approval boxes are typically about
+       one quarter of the page width. Start slightly narrower so the stamp
+       lands cleanly inside the box instead of touching its border. */
+    let wPct = 0.215;
+    let wPx = containerW * wPct;
+    let hPx = wPx / aspect;
+
+    /* Keep the initial stamp shallow enough for compact signature slots. */
+    const maxHPct = 0.082;
+    const maxHPx = containerH * maxHPct;
+    if(hPx > maxHPx){
+      hPx = maxHPx;
+      wPx = hPx * aspect;
+      wPct = wPx / containerW;
+    }
     return {wPct:wPct, hPct:hPx/containerH};
   }
 
@@ -1987,9 +2036,14 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     del.addEventListener("click", removePlacedEntry);
     el.appendChild(del);
 
-    const handle = document.createElement("div");
-    handle.className = "placed-handle";
-    el.appendChild(handle);
+    const handlePositions = ["nw","ne","sw","se"];
+    const handles = handlePositions.map(pos=>{
+      const h = document.createElement("div");
+      h.className = "placed-handle " + pos;
+      h.dataset.handle = pos;
+      el.appendChild(h);
+      return h;
+    });
 
     parentEl.appendChild(el);
     entry._el = el;
@@ -1997,7 +2051,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     /* drag */
     let dragging=false, startX=0, startY=0, startLeftPct=0, startTopPct=0;
     el.addEventListener("pointerdown",(e)=>{
-      if(e.target===handle || e.target===del || e.target.closest(".placed-del")) return;
+      if(e.target.closest(".placed-handle") || e.target===del || e.target.closest(".placed-del")) return;
       dragging = true;
       el.classList.add("dragging","active");
       try{ el.setPointerCapture(e.pointerId); }catch(_e){}
@@ -2018,27 +2072,59 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
       el.addEventListener(evt,()=>{ dragging=false; el.classList.remove("dragging"); });
     });
 
-    /* resize (maintain aspect) */
-    let resizing=false, rStartX=0, rStartW=0;
-    handle.addEventListener("pointerdown",(e)=>{
-      e.stopPropagation();
-      resizing = true;
-      try{ handle.setPointerCapture(e.pointerId); }catch(_e){}
-      rStartX = e.clientX;
-      rStartW = entry.wPct;
-    });
-    handle.addEventListener("pointermove",(e)=>{
-      if(!resizing) return;
-      const r = getParentRect();
-      const dxPct = (e.clientX-rStartX)/r.width;
-      const newW = Math.max(0.03, rStartW + dxPct);
-      const newH = newW * (r.width/entry.aspect) / r.height;
-      entry.wPct = newW; entry.hPct = newH;
-      el.style.width  = (entry.wPct*100)+"%";
-      el.style.height = (entry.hPct*100)+"%";
-    });
-    ["pointerup","pointercancel"].forEach(evt=>{
-      handle.addEventListener(evt,()=> resizing=false);
+    /* resize from any of the 4 corners: full width and height resizing */
+    let resizing=false, resizeHandle=null, rStartX=0, rStartY=0, rStartW=0, rStartH=0, rStartLeft=0, rStartTop=0;
+    handles.forEach(handle=>{
+      handle.addEventListener("pointerdown",(e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        resizing = true;
+        resizeHandle = handle.dataset.handle;
+        el.classList.add("active");
+        try{ handle.setPointerCapture(e.pointerId); }catch(_e){}
+        rStartX = e.clientX;
+        rStartY = e.clientY;
+        rStartW = entry.wPct;
+        rStartH = entry.hPct;
+        rStartLeft = entry.xPct;
+        rStartTop = entry.yPct;
+      });
+      handle.addEventListener("pointermove",(e)=>{
+        if(!resizing || resizeHandle !== handle.dataset.handle) return;
+        const r = getParentRect();
+        const dxPct = (e.clientX-rStartX)/r.width;
+        const dyPct = (e.clientY-rStartY)/r.height;
+
+        const horizontalSign = resizeHandle.includes("e") ? 1 : -1;
+        const verticalSign = resizeHandle.includes("s") ? 1 : -1;
+
+        let newW = rStartW + horizontalSign*dxPct;
+        let newH = rStartH + verticalSign*dyPct;
+
+        newW = Math.max(0.03, Math.min(newW, 0.95));
+        newH = Math.max(0.03, Math.min(newH, 0.95));
+
+        let newLeft = rStartLeft;
+        let newTop = rStartTop;
+
+        if(resizeHandle.includes("w")) newLeft = rStartLeft + (rStartW - newW);
+        if(resizeHandle.includes("n")) newTop = rStartTop + (rStartH - newH);
+
+        newLeft = Math.max(0, Math.min(newLeft, 1-newW));
+        newTop = Math.max(0, Math.min(newTop, 1-newH));
+
+        entry.xPct = newLeft;
+        entry.yPct = newTop;
+        entry.wPct = newW;
+        entry.hPct = newH;
+        el.style.left = (entry.xPct*100)+"%";
+        el.style.top = (entry.yPct*100)+"%";
+        el.style.width = (entry.wPct*100)+"%";
+        el.style.height = (entry.hPct*100)+"%";
+      });
+      ["pointerup","pointercancel"].forEach(evt=>{
+        handle.addEventListener(evt,()=>{ resizing=false; resizeHandle=null; });
+      });
     });
 
     el.addEventListener("pointerdown", ()=>{
