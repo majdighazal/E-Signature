@@ -6,7 +6,7 @@
 <title>E-Signature</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Sacramento&family=Caveat:wght@500;600&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=Sacramento&family=Caveat:wght@500;600&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
@@ -316,7 +316,7 @@ img{max-width:100%;}
   inset:0;
 }
 
-/* ---------- docx page ---------- */
+/* ---------- docx / flow page ---------- */
 .docx-page{
   position:relative;
   width:100%;
@@ -333,6 +333,37 @@ img{max-width:100%;}
 .docx-page img{max-width:100%;height:auto;}
 .docx-page table{border-collapse:collapse; max-width:100%;}
 .docx-page td, .docx-page th{border:1px solid #999; padding:4px 8px;}
+
+/* image documents */
+.doc-image-page{
+  padding:0;
+  max-width:860px;
+  font-size:0;
+  line-height:0;
+  background:#fff;
+}
+.doc-image-page .doc-image{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:100%;
+}
+
+/* text documents */
+.doc-text-page{
+  font-family:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size:14px;
+  line-height:1.7;
+}
+.doc-text-page pre.doc-text{
+  margin:0;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+  overflow-wrap:anywhere;
+  font-family:inherit;
+  font-size:inherit;
+  line-height:inherit;
+}
 
 /* ---------- placed signature/stamp elements ---------- */
 .placed{
@@ -390,6 +421,14 @@ img{max-width:100%;}
   .placed .placed-handle, .placed .placed-del{opacity:1; pointer-events:auto;}
 }
 
+/* hide editing chrome while exporting */
+.exporting .placed{
+  border-color:transparent !important;
+  background:transparent !important;
+}
+.exporting .placed-del,
+.exporting .placed-handle{display:none !important;}
+
 /* ---------- tools pane (desktop sidebar) ---------- */
 .tools-pane{
   flex:0 0 360px;
@@ -425,6 +464,7 @@ img{max-width:100%;}
   flex:1 1 auto;
   overflow-y:auto;
   padding:18px 18px 28px;
+  -webkit-overflow-scrolling:touch;
 }
 .tools-panel{display:none;}
 .tools-panel.active{display:block;}
@@ -563,31 +603,41 @@ select{cursor:pointer;}
   border-radius:var(--radius-sm);
 }
 
-.placing-banner{
-  position:fixed;
-  left:50%;
-  bottom:24px;
-  transform:translateX(-50%);
-  background:var(--ink-900);
-  color:#fff;
-  padding:11px 18px;
-  border-radius:100px;
-  font-size:13px;
-  display:none;
-  align-items:center;
-  gap:12px;
-  box-shadow:var(--shadow-panel);
-  z-index:60;
+/* ---------- placing overlay (centered message) ---------- */
+.placing-overlay {
+  position: fixed; inset: 0; z-index: 80;
+  display: none; align-items: center; justify-content: center;
+  pointer-events: none; /* Let clicks pass through to the document */
+  background: rgba(16,25,43,0.15);
+  backdrop-filter: blur(2px);
 }
-.placing-banner.show{display:flex;}
-.placing-banner button{
-  background:rgba(255,255,255,.14);
-  border:none;color:#fff;
-  border-radius:100px;
-  padding:5px 12px;
-  font-size:12px;
-  cursor:pointer;
+.placing-overlay.show { display: flex; }
+
+.placing-message {
+  background: #fff; border-radius: 16px; padding: 28px 32px;
+  text-align: center; box-shadow: 0 20px 60px rgba(15,34,56,0.25);
+  pointer-events: auto; /* Catch clicks on the message itself */
+  max-width: 340px; width: 90%;
+  border: 1px solid var(--line);
+  animation: popIn 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.placing-message svg {
+  color: var(--es-gold);
+  margin-bottom: 12px;
+}
+.placing-message h2 {
+  font-size: 18px; font-weight: 700; margin: 0 0 8px;
+  color: var(--es-navy); font-family: var(--font-ui);
+}
+.placing-message p {
+  font-size: 13.5px; color: var(--ink-500); margin: 0 0 22px;
+  line-height: 1.5;
+}
+.placing-message .btn { width: 100%; justify-content: center; }
 
 /* ---------- mobile drawer ---------- */
 .mobile-fab{
@@ -718,12 +768,28 @@ body{background:#e8edf3;}
 .signing-header{padding:20px 20px 8px;}.signing-kicker{font-size:10px;letter-spacing:1.2px;font-weight:800;color:#a9bad0;}.signing-title{font-size:26px;font-weight:800;margin-top:5px;color:#fff;}.signing-steps{display:flex;gap:7px;margin-top:14px;flex-wrap:wrap}.signing-steps span{font-size:11px;padding:7px 9px;border-radius:999px;background:rgba(255,255,255,.07);color:#bfcddd;border:1px solid rgba(255,255,255,.09)}.signing-steps .active{background:rgba(199,154,74,.18);border-color:rgba(224,186,114,.4);color:#f3d494;}
 .tools-body{padding:12px 20px 26px;}.subtabs{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:5px;gap:5px}.subtab{color:#c8d5e4;border-radius:9px;font-weight:700}.subtab.active{background:linear-gradient(180deg,var(--es-gold2),var(--es-gold));color:#1a1409;box-shadow:0 7px 16px rgba(199,154,74,.25)}
 .field-label{color:#e7eef8;font-weight:700}.hint{color:#aebdd0}.pad-wrap,.typed-preview,.import-signature-box{background:#fff;border:1px solid rgba(255,255,255,.2);border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.18)}#sigPad{height:165px}.typed-preview{min-height:110px}.import-signature-box{min-height:150px;display:flex;align-items:center;justify-content:center;padding:12px;overflow:hidden}.import-signature-box img{max-height:125px;max-width:100%;object-fit:contain}.import-signature-empty{color:#8591a1;font-size:13px}
-input[type=text],input[type=date],select{border-radius:10px;background:#fff;color:#15263a;border:1px solid #d6dee8}.btn{border-radius:10px;font-weight:700}.btn-accent{background:linear-gradient(180deg,var(--es-gold2),var(--es-gold));border-color:var(--es-gold);color:#171209;box-shadow:0 8px 18px rgba(199,154,74,.25)}.btn-ghost{color:#e6edf7;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}.btn-replace{background:#fff;color:#1b3654;border:1px solid #cfd8e4;box-shadow:0 4px 12px rgba(16,34,56,.06)}.btn-replace:hover{background:#f4f7fa;border-color:#9bacbf}
+input[type=text],input[type=date],select{border-radius:10px;background:#fff;color:#15263a;border:1px solid #d6dee8}.btn{border-radius:10px;font-weight:700}.btn-accent{background:linear-gradient(180deg,var(--es-gold2),var(--es-gold));border-color:var(--es-gold);color:#171209;box-shadow:0 8px 18px rgba(199,154,74,.25)}.btn-ghost{color:#e6edf7;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.10)}
+
+/* Replace Document button - light red & white */
+.btn-replace{
+  background:#E57373;
+  color:#FFFFFF;
+  border:1px solid #E57373;
+  box-shadow:0 4px 12px rgba(229,115,115,.25);
+}
+.btn-replace:hover{
+  background:#EF5350;
+  border-color:#EF5350;
+}
+.btn-replace svg {
+  stroke: #FFFFFF;
+}
+
 .options-card{border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.06);padding:14px;margin:2px 0 14px}.options-title{font-size:14px;font-weight:800;color:#fff;margin-bottom:8px}.option-check{display:flex;align-items:center;gap:9px;padding:10px 2px;color:#fff;font-size:13px;font-weight:650}.option-check input{width:18px;height:18px;accent-color:var(--es-gold)}.option-expand{margin:0 0 8px 27px;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}.date-choice-row{display:flex;gap:16px;color:#e2eaf4;font-size:12px}.date-choice-row label{display:flex;align-items:center;gap:6px}.date-choice-row input{accent-color:var(--es-gold)}
 .insert-signature-btn{min-height:52px;font-size:16px;justify-content:center;gap:10px}.insert-help{font-size:11.5px;line-height:1.45;color:#aebdd0;text-align:center;margin-top:9px}
 .viewer-pane{background:radial-gradient(circle at 50% 0,#f7f9fc 0,#edf1f6 56%,#e5eaf0 100%);padding:30px 28px 100px}.pdf-page,.docx-page{box-shadow:0 2px 5px rgba(16,34,56,.06),0 18px 44px rgba(16,34,56,.13)}
 .placed{border:1.5px solid rgba(16,34,56,.28);border-radius:10px;background:rgba(255,255,255,.04);padding:5px;box-shadow:0 8px 20px rgba(16,34,56,.10)}.placed:hover,.placed.active{border-color:var(--es-gold);background:rgba(199,154,74,.06)}.placed-del{opacity:1!important;pointer-events:auto!important;top:-13px;right:-13px;width:29px;height:29px;border-radius:50%;background:#c93e34;color:#fff;border:2px solid #fff;font-size:18px;font-weight:800;box-shadow:0 6px 14px rgba(201,62,52,.28);z-index:8}.placed-handle{opacity:1!important;pointer-events:auto!important;width:18px;height:18px;right:-8px;bottom:-8px;border:2px solid #fff;box-shadow:0 4px 10px rgba(16,34,56,.20)}
-.placing-banner{display:none!important}
+
 @media(max-width:900px){.tools-pane{order:0;width:auto;flex:none;border-right:none;background:linear-gradient(180deg,#162b44,#0d1e32)}.viewer-pane{padding:18px 12px 100px}.signing-header{padding:15px 15px 6px}.tools-body{padding:10px 15px 24px}.brand-name small{display:none}}
 
 
@@ -738,6 +804,66 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   transform:scale(.92);
 }
 
+/* =========================================================
+   MOBILE-FIRST UX ADDITIONS
+   ========================================================= */
+.mobile-only{display:none !important;}
+
+@media (max-width: 900px){
+  /* labelled "Signature" pill replaces the tiny round FAB */
+  .mobile-fab{
+    display:inline-flex !important;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    position:fixed;
+    right:16px;
+    bottom:16px;
+    width:auto;
+    height:54px;
+    padding:0 22px 0 18px;
+    border-radius:100px;
+    background:linear-gradient(180deg,var(--es-gold2),var(--es-gold));
+    color:#171209;
+    border:none;
+    font-size:15px;
+    font-weight:800;
+    letter-spacing:.2px;
+    box-shadow:0 10px 26px rgba(16,34,56,.34);
+  }
+  .mobile-fab:active{transform:scale(.97);}
+
+  .mobile-only{display:flex !important;}
+
+  /* bigger, easier form controls */
+  input[type="text"], input[type="date"], select{font-size:16px; padding:11px 12px; border-radius:12px;}
+  .btn{padding:11px 16px; font-size:14.5px; border-radius:12px;}
+  .btn-sm{padding:9px 13px; font-size:13.5px;}
+  .subtab{padding:11px 8px; font-size:14px;}
+  .option-check{padding:12px 2px; font-size:14.5px;}
+  .option-check input{width:20px; height:20px;}
+  .swatch{width:26px; height:26px;}
+  input[type="range"]{width:100%; max-width:160px; height:30px;}
+  .pad-toolbar{gap:12px; align-items:center;}
+  .insert-signature-btn{min-height:58px; font-size:16.5px;}
+  .viewer-pane{padding-bottom:132px;}
+  .tools-pane{max-height:84vh;}
+  .tools-body{padding-bottom:36px;}
+  .signing-title{font-size:22px;}
+  .signing-kicker{font-size:9.5px;}
+  .import-signature-box{min-height:132px;}
+  #sigPad{height:150px;}
+  .dropzone{padding:40px 20px; margin-top:3vh;}
+  .dropzone h1{font-size:17.5px;}
+  .doc-status{font-size:12px;}
+  .chip{font-size:10.5px;}
+}
+
+@media (max-width: 420px){
+  .brand-name{font-size:14.5px;}
+  .topbar{gap:8px;}
+  .btn{padding:10px 12px; font-size:13.5px;}
+}
 </style>
 </head>
 <body>
@@ -774,12 +900,12 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <h1>Drop a document to begin</h1>
-          <p>Import a PDF or Word file, then draw, type, or import your signature and sign securely in your browser.</p>
+          <p>Import a PDF, Word file, image or text file — then draw, type or import your signature and sign securely in your browser.</p>
           <button class="btn btn-accent" id="browseBtn">Choose a file</button>
-          <div class="filetypes">Accepts .pdf and .docx — files stay in your browser and are never uploaded.</div>
+          <div class="filetypes">Accepts PDF, DOCX, photos (PNG / JPG / WEBP / GIF) and text files — files stay in your browser and are never uploaded.</div>
         </div>
         <div id="pdfPages" style="display:none; width:100%;"></div>
-        <div id="docxWrap" style="display:none; width:100%; max-width:800px;">
+        <div id="docxWrap" style="display:none; width:100%; max-width:860px;">
           <div class="docx-page" id="docPage"></div>
         </div>
       </div>
@@ -791,6 +917,10 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
         <div class="signing-kicker">SECURE BROWSER SIGNING</div>
         <div class="signing-title">Add Signature</div>
         <div class="signing-steps"><span class="active">1&nbsp; Signature</span><span>2&nbsp; Options</span><span>3&nbsp; Insert</span></div>
+        <button class="btn btn-replace mobile-only" id="hidePanelBtn" style="margin-top:14px; width:100%; justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.7"/></svg>
+          Hide panel — view document
+        </button>
       </div>
       <div class="tools-body">
 
@@ -843,12 +973,29 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
               <img id="importedSignaturePreview" alt="Imported signature preview" style="display:none;">
               <div id="importSignatureEmpty" class="import-signature-empty">PNG, JPG or WEBP</div>
             </div>
-            <input type="file" id="signatureImageInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <input type="file" id="signatureImageInput" accept="image/*" style="display:none;">
             <div class="pad-toolbar">
               <button class="btn btn-accent btn-sm" id="chooseSignatureBtn">Choose Signature Photo</button>
               <button class="btn btn-ghost btn-sm" id="removeSavedSignatureBtn" style="display:none;">Remove Saved</button>
             </div>
-            <p class="hint">The photo background is cleaned automatically and the signature shape is extracted into a transparent professional stamp.</p>
+
+            <div class="field-group" style="margin-top:16px;">
+              <label class="field-label">Signature colour</label>
+              <div class="swatches" id="importSwatches">
+                <button class="swatch active" data-color="original" title="Original colour" style="background:conic-gradient(#c0392b,#e67e22,#27ae60,#2980b9,#8e44ad,#c0392b);"></button>
+                <button class="swatch" data-color="#10192B" title="Ink" style="background:#10192B"></button>
+                <button class="swatch" data-color="#1E3A8A" title="Blue" style="background:#1E3A8A"></button>
+                <button class="swatch" data-color="#7A1F1F" title="Maroon" style="background:#7A1F1F"></button>
+                <button class="swatch" data-color="#000000" title="Black" style="background:#000000"></button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Signature thickness</label>
+              <input type="range" id="importThickness" min="0" max="10" step="0.1" value="0">
+            </div>
+
+            <p class="hint">Your signature keeps its <strong>original colour</strong> by default. It is saved in this browser and restored automatically every time you come back — until you tap “Remove Saved”.</p>
           </div>
 
           <div class="divider"></div>
@@ -861,8 +1008,8 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
               <input type="text" id="signerName" placeholder="e.g. Majdi Haddad" maxlength="80">
             </div>
 
-            <label class="option-check"><input type="checkbox" id="includeDate"><span>Include Date</span></label>
-            <div class="option-expand" id="dateOptions" style="display:none;">
+            <label class="option-check"><input type="checkbox" id="includeDate" checked><span>Include Date</span></label>
+            <div class="option-expand" id="dateOptions">
               <div class="date-choice-row">
                 <label><input type="radio" name="dateMode" value="today" checked> Today</label>
                 <label><input type="radio" name="dateMode" value="manual"> Manual</label>
@@ -897,19 +1044,25 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
 
 <button class="mobile-fab" id="mobileFab" aria-label="Open signature tools">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 20L14.5 9.5M14.5 9.5L18.5 5.5C19.3 4.7 20.6 4.7 21.4 5.5C22.2 6.3 22.2 7.6 21.4 8.4L17.4 12.4M14.5 9.5L17.4 12.4M4 20L8 19.2L17.4 9.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Signature</span>
 </button>
 <div class="drawer-scrim" id="drawerScrim"></div>
 
-<div class="placing-banner" id="placingBanner">
-  <span id="placingBannerText">Tap anywhere on the document to place it</span>
-  <button id="cancelPlacing">Cancel</button>
+<!-- Centered placement overlay message -->
+<div class="placing-overlay" id="placingOverlay">
+  <div class="placing-message">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M14 10l6.1-6.1M9 21H3v-6M10 14l-6.1 6.1"/></svg>
+    <h2>Tap anywhere to place signature</h2>
+    <p>Position it on the document by tapping, then drag to adjust or resize from the corner.</p>
+    <button class="btn btn-accent" id="cancelPlacing">Cancel</button>
+  </div>
 </div>
 
 <div id="toastContainer" aria-live="polite"></div>
 
 <div id="loadingOverlay"><div class="spinner"></div><div class="msg" id="loadingMsg">Working…</div></div>
 
-<input type="file" id="fileInput" accept=".pdf,.docx" style="display:none;">
+<input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.json,.log,.xml,.html,.htm,.rtf,.yaml,.yml,.ini,.tsv,application/pdf,image/*,text/*" style="display:none;">
 
 <script>
 (function(){
@@ -920,37 +1073,50 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   }
   const TARGET_RENDER_WIDTH = 1100;
+  const SIG_STORAGE_KEY   = "eSignature.savedSignature.v3";
+  const SIG_STYLE_KEY     = "eSignature.sigStyle.v3";
+  const SIGNER_NAME_KEY   = "eSignature.signerName.v3";
+  const INCLUDE_DATE_KEY  = "eSignature.includeDate.v3";
 
   const state = {
-    fileType:null,
+    fileType:null,      // 'pdf' | 'flow'
+    docKind:null,       // 'pdf' | 'docx' | 'image' | 'text'
     fileName:"",
     pdfDoc:null,
     pdfBytesForExport:null,
-    pages:[],          // {wrap, canvas, layer, pdfW, pdfH}
+    pages:[],           // {wrap, canvas, layer, pdfW, pdfH}
     signing:false,
     signature:{
       mode:"draw",
       includeName:false,
-      includeDate:false,
+      includeDate:true,
       signerName:"",
       dateMode:"today",
       manualDate:"",
+      importedBaseUrl:"",
+      importedBaseImage:null,
       importedDataUrl:"",
-      importedImage:null,
+      importedImage:null,        // styled canvas used for stamping
+      importedColor:"original",
+      importedThickness:0,
       penColor:"#10192B",
       penWidth:2.5,
       typedText:"",
       typedFont:"Sacramento",
       typedColor:"#10192B",
     },
-    placing:null,       // {kind:'signature'|'date'}
-    placed:[],          // {id,kind,target,pageIndex,xPct,yPct,wPct,hPct,dataUrl,aspect}
+    placing:null,
+    placed:[],
     idSeq:1,
   };
 
   /* ---------------- helpers ---------------- */
   const $ = (sel,root)=> (root||document).querySelector(sel);
   const $$ = (sel,root)=> Array.from((root||document).querySelectorAll(sel));
+
+  function safeGet(key){ try{ return localStorage.getItem(key); }catch(_e){ return null; } }
+  function safeSet(key,val){ try{ localStorage.setItem(key,val); }catch(_e){} }
+  function safeDel(key){ try{ localStorage.removeItem(key); }catch(_e){} }
 
   function showToast(msg, type){
     const c = $("#toastContainer");
@@ -1002,46 +1168,68 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     if(f) handleFile(f);
   });
 
-  /* ---------------- file handling ---------------- */
+  /* ---------------- file handling (accepts everything) ---------------- */
+  const IMAGE_EXTS = ["png","jpg","jpeg","webp","gif","bmp","avif","svg"];
+  const TEXT_EXTS  = ["txt","md","markdown","csv","json","log","xml","html","htm","rtf","yaml","yml","ini","tsv"];
+
+  function detectKind(file){
+    const name = (file.name || "").toLowerCase();
+    const ext  = name.indexOf(".") >= 0 ? name.split(".").pop() : "";
+    const mime = (file.type || "").toLowerCase();
+
+    if(ext === "pdf" || mime === "application/pdf") return "pdf";
+    if(ext === "docx" || mime.indexOf("wordprocessingml") >= 0) return "docx";
+    if(ext === "doc") return "doclegacy";
+    if(mime.indexOf("image/") === 0 || IMAGE_EXTS.indexOf(ext) >= 0) return "image";
+    if(mime.indexOf("text/") === 0 || TEXT_EXTS.indexOf(ext) >= 0) return "text";
+    return "text"; // last resort — try to read it as plain text
+  }
+
   function handleFile(file){
-    const name = file.name || "document";
-    const ext = name.split(".").pop().toLowerCase();
-    if(ext !== "pdf" && ext !== "docx"){
-      showToast("Please choose a .pdf or .docx file.", "error");
+    if(!file) return;
+    const kind = detectKind(file);
+    if(kind === "doclegacy"){
+      showToast("Legacy .doc isn't supported — save it as .docx or PDF first.", "error");
       return;
     }
     resetDocument();
-    state.fileName = name;
-    showLoading(ext === "pdf" ? "Opening PDF…" : "Opening Word document…");
+    state.fileName = file.name || "document";
+    state.docKind  = kind;
+    state.fileType = (kind === "pdf") ? "pdf" : "flow";
+
+    showLoading(kind === "pdf" ? "Opening PDF…"
+              : kind === "docx" ? "Opening Word document…"
+              : kind === "image" ? "Opening image…"
+              : "Opening document…");
+
     const reader = new FileReader();
-    reader.onload = function(ev){
-      const buf = ev.target.result;
-      if(ext === "pdf"){
-        state.fileType = "pdf";
-        loadPdf(buf.slice(0)).then(()=>{
+    reader.onload = async function(ev){
+      try{
+        if(state.docKind === "pdf"){
+          const buf = ev.target.result;
+          await loadPdf(buf.slice(0));
           state.pdfBytesForExport = buf.slice(0);
-          onDocumentReady();
-        }).catch(err=>{
-          console.error(err);
-          hideLoading();
-          showToast("Couldn't open that PDF. It may be encrypted or corrupted.", "error");
-        });
-      } else {
-        state.fileType = "docx";
-        loadDocx(buf).then(()=>{
-          onDocumentReady();
-        }).catch(err=>{
-          console.error(err);
-          hideLoading();
-          showToast("Couldn't read that Word document.", "error");
-        });
+        } else if(state.docKind === "docx"){
+          await loadDocx(ev.target.result);
+        } else if(state.docKind === "image"){
+          loadImageDoc(ev.target.result);
+        } else {
+          loadTextDoc(ev.target.result);
+        }
+        onDocumentReady();
+      }catch(err){
+        console.error(err);
+        hideLoading();
+        showToast("Couldn't open that file.", "error");
       }
     };
     reader.onerror = function(){
       hideLoading();
       showToast("Couldn't read the file.", "error");
     };
-    reader.readAsArrayBuffer(file);
+
+    if(kind === "image") reader.readAsDataURL(file);
+    else reader.readAsArrayBuffer(file);
   }
 
   function resetDocument(){
@@ -1051,8 +1239,10 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     state.placed = [];
     state.placing = null;
     $("#pdfPages").innerHTML = "";
-    $("#docPage").innerHTML = "";
-    hidePlacingBanner();
+    const dp = $("#docPage");
+    dp.className = "docx-page";
+    dp.innerHTML = "";
+    stopPlacing();
     updatePlacedUI();
   }
 
@@ -1121,16 +1311,51 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     }
   }
 
-  /* ---------------- DOCX rendering ---------------- */
+  /* ---------------- DOCX / image / text rendering ---------------- */
   function loadDocx(arrayBuffer){
     return mammoth.convertToHtml({arrayBuffer:arrayBuffer})
       .then(function(result){
         const target = $("#docPage");
+        target.className = "docx-page";
         target.innerHTML = result.value || "<p><em>(empty document)</em></p>";
         if(result.messages && result.messages.length){
           console.warn("mammoth messages:", result.messages);
         }
       });
+  }
+
+  function decodeText(buffer){
+    try{
+      return new TextDecoder("utf-8", {fatal:false}).decode(buffer);
+    }catch(_e){
+      let s = "";
+      const bytes = new Uint8Array(buffer);
+      for(let i=0;i<bytes.length;i++) s += String.fromCharCode(bytes[i]);
+      return s;
+    }
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+    });
+  }
+
+  function loadImageDoc(dataUrl){
+    const target = $("#docPage");
+    target.className = "docx-page doc-image-page";
+    target.innerHTML = "";
+    const img = document.createElement("img");
+    img.className = "doc-image";
+    img.alt = "Document image";
+    img.src = dataUrl;
+    target.appendChild(img);
+  }
+
+  function loadTextDoc(arrayBuffer){
+    const text = decodeText(arrayBuffer);
+    const target = $("#docPage");
+    target.className = "docx-page doc-text-page";
+    target.innerHTML = '<pre class="doc-text">'+escapeHtml(text)+'</pre>';
   }
 
   /* ---------------- signature pad (draw) ---------------- */
@@ -1142,10 +1367,12 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
 
   function resizePad(){
     const rect = sigPad.getBoundingClientRect();
+    if(!rect.width) return;
     const dpr = window.devicePixelRatio || 1;
     const prevData = padHasInk ? sigPad.toDataURL() : null;
     sigPad.width = Math.round(rect.width * dpr);
     sigPad.height = Math.round(rect.height * dpr);
+    sigCtx.setTransform(1,0,0,1,0,0);
     sigCtx.scale(dpr, dpr);
     sigCtx.lineCap = "round";
     sigCtx.lineJoin = "round";
@@ -1165,8 +1392,9 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   sigPad.addEventListener("pointerdown", (e)=>{
     drawing = true;
     padHasInk = true;
-    sigPad.setPointerCapture(e.pointerId);
+    try{ sigPad.setPointerCapture(e.pointerId); }catch(_e){}
     lastPt = padPoint(e);
+    e.preventDefault();
   });
   sigPad.addEventListener("pointermove", (e)=>{
     if(!drawing) return;
@@ -1178,6 +1406,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     sigCtx.lineTo(p.x, p.y);
     sigCtx.stroke();
     lastPt = p;
+    e.preventDefault();
   });
   ["pointerup","pointerleave","pointercancel"].forEach(evt=>{
     sigPad.addEventListener(evt, ()=> drawing = false);
@@ -1185,7 +1414,9 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
 
   $("#clearPad").addEventListener("click", ()=>{
     const rect = sigPad.getBoundingClientRect();
-    sigCtx.clearRect(0,0,rect.width,rect.height);
+    sigCtx.setTransform(1,0,0,1,0,0);
+    sigCtx.clearRect(0,0,sigPad.width,sigPad.height);
+    resizePad();
     padHasInk = false;
   });
   $$("#penSwatches .swatch").forEach(btn=>{
@@ -1222,21 +1453,20 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     });
   });
 
-  /* ---------------- subtabs (draw/type) ---------------- */
+  /* ---------------- subtabs (draw/type/import) ---------------- */
   $$(".subtab").forEach(tab=>{
     tab.addEventListener("click", ()=>{
       $$(".subtab").forEach(t=>t.classList.remove("active"));
       $$(".subpanel").forEach(p=>p.classList.remove("active"));
       tab.classList.add("active");
-      $("#sub-"+tab.dataset.sub).classList.add("active");
+      const panel = $("#sub-"+tab.dataset.sub);
+      if(panel) panel.classList.add("active");
       state.signature.mode = tab.dataset.sub;
       if(tab.dataset.sub === "draw") setTimeout(resizePad, 10);
     });
   });
 
   /* ---------------- signature options + imported signature ---------------- */
-  const SIGNATURE_STORAGE_KEY = "eSignature.savedSignature.v2";
-  const SIGNER_NAME_STORAGE_KEY = "eSignature.signerName.v2";
   const includeName = $("#includeName");
   const includeDate = $("#includeDate");
   const signerName = $("#signerName");
@@ -1245,9 +1475,21 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   const importedSignaturePreview = $("#importedSignaturePreview");
   const importSignatureEmpty = $("#importSignatureEmpty");
   const removeSavedSignatureBtn = $("#removeSavedSignatureBtn");
+  const importThicknessInput = $("#importThickness");
 
-  try{ signerName.value = localStorage.getItem(SIGNER_NAME_STORAGE_KEY) || ""; }catch(_e){}
+  /* --- signer name persistence --- */
+  const storedName = safeGet(SIGNER_NAME_KEY);
+  if(storedName){ signerName.value = storedName; }
   state.signature.signerName = signerName.value.trim();
+
+  /* --- DATE IS ON BY DEFAULT unless the user turned it off --- */
+  (function initDateDefault(){
+    const pref = safeGet(INCLUDE_DATE_KEY);
+    const on = (pref === null) ? true : (pref === "1");
+    includeDate.checked = on;
+    state.signature.includeDate = on;
+    $("#dateOptions").style.display = on ? "block" : "none";
+  })();
 
   includeName.addEventListener("change", ()=>{
     state.signature.includeName = includeName.checked;
@@ -1256,10 +1498,11 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   includeDate.addEventListener("change", ()=>{
     state.signature.includeDate = includeDate.checked;
     $("#dateOptions").style.display = includeDate.checked ? "block" : "none";
+    safeSet(INCLUDE_DATE_KEY, includeDate.checked ? "1" : "0");
   });
   signerName.addEventListener("input", ()=>{
     state.signature.signerName = signerName.value.trim();
-    try{ localStorage.setItem(SIGNER_NAME_STORAGE_KEY, signerName.value); }catch(_e){}
+    safeSet(SIGNER_NAME_KEY, signerName.value);
   });
   $$('input[name="dateMode"]').forEach(r=>r.addEventListener("change", ()=>{
     state.signature.dateMode = r.value;
@@ -1267,6 +1510,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   }));
   manualDateValue.addEventListener("change", ()=> state.signature.manualDate = manualDateValue.value);
 
+  /* --- keep original colour, clean only the background --- */
   function cleanSignaturePhoto(img){
     const maxDim = 1400;
     const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
@@ -1275,18 +1519,77 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     const c = document.createElement("canvas"); c.width=w; c.height=h;
     const ctx = c.getContext("2d", {willReadFrequently:true});
     ctx.drawImage(img,0,0,w,h);
-    const im = ctx.getImageData(0,0,w,h), d=im.data;
+    const im = ctx.getImageData(0,0,w,h), d = im.data;
     for(let i=0;i<d.length;i+=4){
       const r=d[i], g=d[i+1], b=d[i+2], a=d[i+3];
-      if(a<8){ d[i+3]=0; continue; }
-      const avg=(r+g+b)/3, spread=Math.max(r,g,b)-Math.min(r,g,b);
-      if(avg>242 || (avg>220 && spread<18)){ d[i+3]=0; continue; }
-      const darkness=Math.max(0,255-avg);
-      d[i]=16; d[i+1]=25; d[i+2]=43;
-      d[i+3]=Math.max(125,Math.min(255,Math.round(darkness*1.9)));
+      if(a < 8){ d[i+3] = 0; continue; }
+      const avg = (r+g+b)/3;
+      const spread = Math.max(r,g,b) - Math.min(r,g,b);
+      /* near-white / low-saturation paper → fully transparent */
+      if(avg > 242 || (avg > 220 && spread < 18)){ d[i+3] = 0; continue; }
+      /* ORIGINAL RGB IS PRESERVED — only the alpha is derived from darkness */
+      const darkness = Math.max(0, 255 - avg);
+      const alpha = Math.round((a/255) * Math.min(255, darkness * 1.9));
+      d[i+3] = Math.max(0, Math.min(255, alpha));
     }
     ctx.putImageData(im,0,0);
     return trimCanvas(c) || c;
+  }
+
+  /* --- apply user colour + thickness to the imported signature --- */
+  function styleSignatureSource(src, color, thickness){
+    const sw = src.naturalWidth || src.width;
+    const sh = src.naturalHeight || src.height;
+    const tRaw = Math.max(0, Number(thickness) || 0);
+    // Scale down the thickness effect so it doesn't get bold too quickly
+    const t = tRaw * 0.25; 
+    const pad = Math.ceil(t) + 2;
+    const c = document.createElement("canvas");
+    c.width = sw + pad*2;
+    c.height = sh + pad*2;
+    const ctx = c.getContext("2d");
+    if(t > 0){
+      // Use more steps for smoother curves
+      const steps = Math.max(24, Math.round(t * 24));
+      for(let i=0;i<steps;i++){
+        const a = (Math.PI*2*i)/steps;
+        ctx.drawImage(src, pad + Math.cos(a)*t, pad + Math.sin(a)*t, sw, sh);
+      }
+    } else {
+      ctx.drawImage(src, pad, pad, sw, sh);
+    }
+    if(color && color !== "original"){
+      ctx.globalCompositeOperation = "source-in";
+      ctx.fillStyle = color;
+      ctx.fillRect(0,0,c.width,c.height);
+      ctx.globalCompositeOperation = "source-over";
+    }
+    return c;
+  }
+
+  const refreshImportedPreview = debounce(function(){
+    const base = state.signature.importedBaseImage;
+    if(!base) return;
+    const styled = styleSignatureSource(base, state.signature.importedColor, state.signature.importedThickness);
+    state.signature.importedImage = styled;
+    state.signature.importedDataUrl = styled.toDataURL("image/png");
+    importedSignaturePreview.src = state.signature.importedDataUrl;
+    importedSignaturePreview.style.display = "block";
+    importSignatureEmpty.style.display = "none";
+  }, 50);
+
+  function persistImportStyle(){
+    safeSet(SIG_STYLE_KEY, JSON.stringify({
+      color: state.signature.importedColor,
+      thickness: state.signature.importedThickness
+    }));
+  }
+
+  function syncImportControls(){
+    $$("#importSwatches .swatch").forEach(b=>{
+      b.classList.toggle("active", b.dataset.color === state.signature.importedColor);
+    });
+    importThicknessInput.value = String(state.signature.importedThickness);
   }
 
   function activateImportedSignatureMode(){
@@ -1298,51 +1601,89 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     if(importPanel) importPanel.classList.add("active");
   }
 
-  function setImportedSignature(dataUrl, persist){
-    const img = new Image();
-    img.onload = ()=>{
-      state.signature.importedDataUrl = dataUrl;
-      state.signature.importedImage = img;
-      importedSignaturePreview.src = dataUrl;
-      importedSignaturePreview.style.display = "block";
-      importSignatureEmpty.style.display = "none";
+  function setImportedSignature(baseDataUrl, persist, switchTab){
+    const raw = new Image();
+    raw.onload = ()=>{
+      state.signature.importedBaseUrl = baseDataUrl;
+      state.signature.importedBaseImage = raw;
+      refreshImportedPreview();
       removeSavedSignatureBtn.style.display = "inline-flex";
-      activateImportedSignatureMode();
-      if(persist){ try{ localStorage.setItem(SIGNATURE_STORAGE_KEY,dataUrl); }catch(_e){} }
+      if(switchTab !== false) activateImportedSignatureMode();
+      if(persist) safeSet(SIG_STORAGE_KEY, baseDataUrl);
     };
-    img.onerror = ()=>showToast("Couldn't read that signature image.","error");
-    img.src = dataUrl;
+    raw.onerror = ()=>showToast("Couldn't read that signature image.","error");
+    raw.src = baseDataUrl;
   }
 
-  try{
-    const saved = localStorage.getItem(SIGNATURE_STORAGE_KEY);
-    if(saved) setImportedSignature(saved,false);
-  }catch(_e){}
+  /* --- restore saved signature + style automatically, on every visit --- */
+  (function restoreSavedSignature(){
+    const styleRaw = safeGet(SIG_STYLE_KEY);
+    if(styleRaw){
+      try{
+        const s = JSON.parse(styleRaw);
+        if(s && s.color) state.signature.importedColor = s.color;
+        if(s && s.thickness !== undefined) state.signature.importedThickness = Number(s.thickness) || 0;
+      }catch(_e){}
+    }
+    syncImportControls();
+
+    const saved = safeGet(SIG_STORAGE_KEY);
+    if(saved){
+      setImportedSignature(saved, false, false);
+      removeSavedSignatureBtn.style.display = "inline-flex";
+    }
+  })();
 
   $("#chooseSignatureBtn").addEventListener("click", ()=>signatureImageInput.click());
   signatureImageInput.addEventListener("change", e=>{
-    const file=e.target.files && e.target.files[0]; e.target.value="";
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
     if(!file) return;
-    if(!/^image\/(png|jpeg|webp)$/i.test(file.type||"")){ showToast("Choose a PNG, JPG or WEBP image.","error"); return; }
-    const fr=new FileReader();
-    fr.onload=()=>{
-      const raw=new Image();
-      raw.onload=()=>{
-        const cleaned=cleanSignaturePhoto(raw);
-        setImportedSignature(cleaned.toDataURL("image/png"),true);
-        showToast("Signature extracted and saved in this browser.","success");
+    if(!/^image\//i.test(file.type || "") && !/\.(png|jpe?g|webp|gif|bmp)$/i.test(file.name||"")){
+      showToast("Choose an image file (PNG, JPG or WEBP).","error");
+      return;
+    }
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      const raw = new Image();
+      raw.onload = ()=>{
+        const cleaned = cleanSignaturePhoto(raw);
+        setImportedSignature(cleaned.toDataURL("image/png"), true, true);
+        showToast("Signature extracted in its original colour and saved.","success");
       };
-      raw.onerror=()=>showToast("Couldn't process that signature photo.","error");
-      raw.src=fr.result;
+      raw.onerror = ()=>showToast("Couldn't process that signature photo.","error");
+      raw.src = fr.result;
     };
-    fr.onerror=()=>showToast("Couldn't read that image.","error");
+    fr.onerror = ()=>showToast("Couldn't read that image.","error");
     fr.readAsDataURL(file);
   });
+
   removeSavedSignatureBtn.addEventListener("click", ()=>{
-    state.signature.importedDataUrl=""; state.signature.importedImage=null;
-    importedSignaturePreview.removeAttribute("src"); importedSignaturePreview.style.display="none";
-    importSignatureEmpty.style.display="block"; removeSavedSignatureBtn.style.display="none";
-    try{ localStorage.removeItem(SIGNATURE_STORAGE_KEY); }catch(_e){}
+    state.signature.importedBaseUrl = "";
+    state.signature.importedBaseImage = null;
+    state.signature.importedImage = null;
+    state.signature.importedDataUrl = "";
+    importedSignaturePreview.removeAttribute("src");
+    importedSignaturePreview.style.display = "none";
+    importSignatureEmpty.style.display = "block";
+    removeSavedSignatureBtn.style.display = "none";
+    safeDel(SIG_STORAGE_KEY);
+    safeDel(SIG_STYLE_KEY);
+    showToast("Saved signature removed from this browser.","");
+  });
+
+  $$("#importSwatches .swatch").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      $$("#importSwatches .swatch").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      state.signature.importedColor = btn.dataset.color;
+      persistImportStyle();
+      refreshImportedPreview();
+    });
+  });
+  importThicknessInput.addEventListener("input", (e)=>{
+    state.signature.importedThickness = parseFloat(e.target.value) || 0;
+    persistImportStyle();
+    refreshImportedPreview();
   });
 
   /* ---------------- compose signature image ---------------- */
@@ -1373,97 +1714,124 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   }
 
   function composeStamp(){
-    let src=null;
-    if(state.signature.mode==="draw"){
+    let src = null;
+    if(state.signature.mode === "draw"){
       if(!padHasInk) return null;
-      src=trimCanvas(sigPad); if(!src) return null;
-    }else if(state.signature.mode==="type"){
-      const txt=(state.signature.typedText||"").trim(); if(!txt) return null;
-      const fs=86, mc=document.createElement("canvas").getContext("2d");
-      mc.font=fs+"px '"+state.signature.typedFont+"', cursive";
-      const c=document.createElement("canvas"); c.width=Math.ceil(mc.measureText(txt).width)+50; c.height=132;
-      const cctx=c.getContext("2d"); cctx.font=fs+"px '"+state.signature.typedFont+"', cursive"; cctx.fillStyle=state.signature.typedColor; cctx.textBaseline="middle"; cctx.fillText(txt,25,c.height/2);
-      src=trimCanvas(c)||c;
-    }else{
+      src = trimCanvas(sigPad); if(!src) return null;
+    } else if(state.signature.mode === "type"){
+      const txt = (state.signature.typedText || "").trim(); if(!txt) return null;
+      const fs = 86;
+      const mc = document.createElement("canvas").getContext("2d");
+      mc.font = fs + "px '" + state.signature.typedFont + "', cursive";
+      const c = document.createElement("canvas");
+      c.width = Math.ceil(mc.measureText(txt).width) + 50;
+      c.height = 132;
+      const cctx = c.getContext("2d");
+      cctx.font = fs + "px '" + state.signature.typedFont + "', cursive";
+      cctx.fillStyle = state.signature.typedColor;
+      cctx.textBaseline = "middle";
+      cctx.fillText(txt, 25, c.height/2);
+      src = trimCanvas(c) || c;
+    } else {
       if(!state.signature.importedImage) return null;
-      src=state.signature.importedImage;
+      src = state.signature.importedImage;
     }
-    const sw=src.naturalWidth||src.width, sh=src.naturalHeight||src.height; if(!sw||!sh) return null;
-    const name=includeName.checked ? signerName.value.trim() : "";
-    const dateIso=includeDate.checked ? (state.signature.dateMode==="manual" ? manualDateValue.value : todayISO()) : "";
+
+    const sw = src.naturalWidth || src.width;
+    const sh = src.naturalHeight || src.height;
+    if(!sw || !sh) return null;
+
+    const name = includeName.checked ? signerName.value.trim() : "";
+    const dateIso = includeDate.checked
+      ? (state.signature.dateMode === "manual" ? manualDateValue.value : todayISO())
+      : "";
     if(includeName.checked && !name){ showToast("Enter the signer name or untick Include Name.","error"); return null; }
     if(includeDate.checked && !dateIso){ showToast("Choose a date or use Today.","error"); return null; }
-    const dateText=dateIso ? formatDateNice(dateIso) : "";
+    const dateText = dateIso ? formatDateNice(dateIso) : "";
 
-    const scale=Math.min(1,520/sw), dw=Math.max(165,Math.round(sw*scale)), dh=Math.max(58,Math.round(sh*scale));
-    const labelRail=58;
-    const contentPad=22;
-    const contentW=Math.max(235,dw+contentPad*2);
-    const W=labelRail+contentW;
-    const H=28+dh+18+(name?28:0)+(dateText?22:0)+18;
-    const out=document.createElement("canvas"); out.width=W; out.height=H;
-    const ctx=out.getContext("2d");
+    const scale = Math.min(1, 520/sw);
+    const dw = Math.max(165, Math.round(sw*scale));
+    const dh = Math.max(58,  Math.round(sh*scale));
 
-    /* professional compact signature frame */
-    roundRect(ctx,1.5,1.5,W-3,H-3,12);
-    ctx.fillStyle="#FFFFFF";
+    const labelRail  = 58; // Reduced from 78 to tighten the stamp
+    const contentPad = 22;
+    const contentW   = Math.max(240, dw + contentPad*2);
+    const W = labelRail + contentW;
+    const H = Math.max(190, 28 + dh + 18 + (name?28:0) + (dateText?22:0) + 18);
+
+    const out = document.createElement("canvas");
+    out.width = W; out.height = H;
+    const ctx = out.getContext("2d");
+
+    /* frame */
+    roundRect(ctx, 1.5, 1.5, W-3, H-3, 12);
+    ctx.fillStyle = "#FFFFFF";
     ctx.fill();
-    ctx.strokeStyle="#C8CED5";
-    ctx.lineWidth=1.2;
+    ctx.strokeStyle = "#C8CED5";
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    /* left verification rail */
-    ctx.strokeStyle="#D7DCE1";
-    ctx.lineWidth=1;
+    /* left verification rail divider */
+    ctx.strokeStyle = "#D7DCE1";
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(labelRail,16);
-    ctx.lineTo(labelRail,H-16);
+    ctx.moveTo(labelRail, 16);
+    ctx.lineTo(labelRail, H-16);
     ctx.stroke();
 
-    /* clear verification label: solid light green, not a watermark */
+    /* ===== "DIGITALLY SIGNED" label (single line, rotated) ===== */
     ctx.save();
     ctx.translate(labelRail/2, H/2);
     ctx.rotate(-Math.PI/2);
-    ctx.textAlign="center";
-    ctx.textBaseline="middle";
-    ctx.globalAlpha=1;
-    ctx.fillStyle="#69B84A";
-    ctx.font="700 "+Math.max(12,Math.min(15,Math.round(H*0.05)))+"px 'IBM Plex Sans',sans-serif";
-    ctx.fillText("DIGITALLY SIGNED",0,0,H-34);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "#3E9B4F";
+
+    let railFont = Math.max(10, Math.min(15, Math.round(H * 0.055)));
+    ctx.font = "400 " + railFont + "px 'IBM Plex Sans',sans-serif";
+    const labelText = "DIGITALLY SIGNED";
+    const labelWidth = ctx.measureText(labelText).width;
+    const railAvail = H - 20;
+    if(labelWidth > railAvail){
+      railFont = Math.max(8, Math.floor(railFont * railAvail / labelWidth));
+      ctx.font = "400 " + railFont + "px 'IBM Plex Sans',sans-serif";
+    }
+    ctx.fillText(labelText, 0, 0);
     ctx.restore();
 
-    const contentCenter=labelRail + contentW/2;
+    const contentCenter = labelRail + contentW/2;
 
     /* signature itself */
-    ctx.drawImage(src,contentCenter-dw/2,24,dw,dh);
+    ctx.drawImage(src, contentCenter - dw/2, 24, dw, dh);
 
-    let y=24+dh+10;
+    let y = 24 + dh + 10;
     if(name || dateText){
-      ctx.strokeStyle="#E0E4E8";
-      ctx.lineWidth=1;
+      ctx.strokeStyle = "#E0E4E8";
+      ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(labelRail+18,y);
-      ctx.lineTo(W-18,y);
+      ctx.moveTo(labelRail + 18, y);
+      ctx.lineTo(W - 18, y);
       ctx.stroke();
-      y+=9;
+      y += 9;
     }
 
-    ctx.textAlign="center";
-    ctx.textBaseline="top";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
     if(name){
-      ctx.fillStyle="#203743";
-      ctx.font="700 20px 'IBM Plex Sans',sans-serif";
-      ctx.fillText(name,contentCenter,y,contentW-30);
-      y+=28;
+      ctx.fillStyle = "#203743";
+      ctx.font = "700 20px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(name, contentCenter, y, contentW-30);
+      y += 28;
     }
     if(dateText){
-      ctx.fillStyle="#718096";
-      ctx.font="600 15px 'IBM Plex Sans',sans-serif";
-      ctx.fillText(dateText,contentCenter,y,contentW-30);
-      y+=22;
+      ctx.fillStyle = "#718096";
+      ctx.font = "600 15px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(dateText, contentCenter, y, contentW-30);
+      y += 22;
     }
 
-    return {dataUrl:out.toDataURL("image/png"),aspect:W/H};
+    return {dataUrl: out.toDataURL("image/png"), aspect: W/H};
   }
 
   function roundRect(ctx,x,y,w,h,r){
@@ -1476,48 +1844,21 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     ctx.closePath();
   }
 
-  /* ---------------- immediate placement flow ---------------- */
-  $("#placeSigBtn").addEventListener("click", ()=>{
-    if(!state.fileType){ showToast("Import a document first.","error"); return; }
-
-    /* If a signature photo is loaded, use it automatically.
-       Never ask the user to draw a signature first. */
-    if(state.signature.importedImage){
-      activateImportedSignatureMode();
-    }
-
-    const stamp=composeStamp();
-    if(!stamp){
-      const msg=state.signature.importedImage ? "Couldn't prepare the imported signature. Please reload the image." : (state.signature.mode==="draw" ? "Draw a signature first." : state.signature.mode==="type" ? "Type your signature first." : "Import a signature photo first.");
-      showToast(msg,"error"); return;
-    }
-    if(state.fileType==="pdf"){
-      if(!state.pages.length){ showToast("The PDF is still loading.","error"); return; }
-      const vr=$("#viewerPane").getBoundingClientRect(); let best=0,bestArea=-1;
-      state.pages.forEach((pg,i)=>{ const r=pg.wrap.getBoundingClientRect(); const ow=Math.max(0,Math.min(r.right,vr.right)-Math.max(r.left,vr.left)); const oh=Math.max(0,Math.min(r.bottom,vr.bottom)-Math.max(r.top,vr.top)); const a=ow*oh; if(a>bestArea){bestArea=a;best=i;} });
-      placeStampOnPdf(best,.58,.62,"signature",stamp);
-    }else{
-      placeStampOnDocx(.58,.62,"signature",stamp);
-    }
-    closeDrawer(); showToast("Signature inserted. Drag it to position it.","success");
-  });
-  function startPlacing(){}
-  function stopPlacing(){ state.placing=null; $("#viewerPane").classList.remove("placing"); hidePlacingBanner(); }
-  $("#cancelPlacing").addEventListener("click", stopPlacing);
-
-  function startPlacing(kind, stamp){
-    state.placing = {kind, stamp};
+  /* ---------------- placement flow (centered message) ---------------- */
+  function startPlacing(stamp){
+    state.placing = { kind: 'signature', stamp: stamp };
+    $("#placingOverlay").classList.add("show");
     $("#viewerPane").classList.add("placing");
-    $("#placingBannerText").textContent = "Tap anywhere on the document to place it";
-    $("#placingBanner").classList.add("show");
     closeDrawer();
   }
+
   function stopPlacing(){
     state.placing = null;
     $("#viewerPane").classList.remove("placing");
-    hidePlacingBanner();
+    $("#placingOverlay").classList.remove("show");
   }
-  function hidePlacingBanner(){ $("#placingBanner").classList.remove("show"); }
+
+  $("#cancelPlacing").addEventListener("click", stopPlacing);
 
   $("#viewerPane").addEventListener("click", function(e){
     if(!state.placing) return;
@@ -1529,20 +1870,45 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
       const xPct = (e.clientX - rect.left) / rect.width;
       const yPct = (e.clientY - rect.top) / rect.height;
       placeStampOnPdf(idx, xPct, yPct, state.placing.kind, state.placing.stamp);
-    } else if(state.fileType === "docx"){
+    } else if(state.fileType === "flow"){
       const pageEl = $("#docPage");
       if(!pageEl.contains(e.target) && e.target !== pageEl) return;
       const rect = pageEl.getBoundingClientRect();
       const xPct = (e.clientX - rect.left) / rect.width;
       const yPct = (e.clientY - rect.top) / rect.height;
-      placeStampOnDocx(xPct, yPct, state.placing.kind, state.placing.stamp);
+      placeStampOnFlow(xPct, yPct, state.placing.kind, state.placing.stamp);
     }
     stopPlacing();
   });
 
+  $("#placeSigBtn").addEventListener("click", ()=>{
+    if(!state.fileType){ showToast("Import a document first.","error"); return; }
+
+    /* If the current mode has nothing to give but a saved imported signature
+       exists, fall back to it automatically. */
+    if(state.signature.mode !== "import"){
+      const hasDrawn = state.signature.mode === "draw" && padHasInk;
+      const hasTyped = state.signature.mode === "type" && (state.signature.typedText||"").trim();
+      if(!hasDrawn && !hasTyped && state.signature.importedImage){
+        activateImportedSignatureMode();
+      }
+    }
+
+    const stamp = composeStamp();
+    if(!stamp){
+      const msg = state.signature.mode === "draw" ? "Draw a signature first."
+                : state.signature.mode === "type" ? "Type your signature first."
+                : "Import a signature photo first.";
+      showToast(msg, "error");
+      return;
+    }
+
+    startPlacing(stamp);
+  });
+
   function defaultSizeFor(kind, aspect, containerW, containerH){
-    const wPct=0.24, wPx=containerW*wPct, hPx=wPx/aspect;
-    return {wPct:wPct,hPct:hPx/containerH};
+    const wPct = 0.24, wPx = containerW*wPct, hPx = wPx/aspect;
+    return {wPct:wPct, hPct:hPx/containerH};
   }
 
   function placeStampOnPdf(pageIndex, xPct, yPct, kind, stamp){
@@ -1563,13 +1929,13 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     updatePlacedUI();
   }
 
-  function placeStampOnDocx(xPct, yPct, kind, stamp){
+  function placeStampOnFlow(xPct, yPct, kind, stamp){
     const pageEl = $("#docPage");
     const rect = pageEl.getBoundingClientRect();
     const size = defaultSizeFor(kind, stamp.aspect, rect.width, rect.height);
     const entry = {
       id: state.idSeq++,
-      kind, target:"docx", pageIndex:0,
+      kind, target:"flow", pageIndex:0,
       xPct: clamp01(xPct - size.wPct/2),
       yPct: clamp01(yPct - size.hPct/2),
       wPct: size.wPct, hPct: size.hPct,
@@ -1601,20 +1967,14 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     del.innerHTML = "&times;";
     del.title = "Remove";
     function removePlacedEntry(ev){
-      if(ev){
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
+      if(ev){ ev.preventDefault(); ev.stopPropagation(); }
       dragging = false;
       resizing = false;
       if(entry._el && entry._el.parentNode) entry._el.remove();
       state.placed = state.placed.filter(p=>p.id!==entry.id);
       updatePlacedUI();
     }
-    del.addEventListener("pointerdown", (ev)=>{
-      ev.preventDefault();
-      ev.stopPropagation();
-    });
+    del.addEventListener("pointerdown", (ev)=>{ ev.preventDefault(); ev.stopPropagation(); });
     del.addEventListener("click", removePlacedEntry);
     el.appendChild(del);
 
@@ -1631,8 +1991,8 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
       if(e.target===handle || e.target===del || e.target.closest(".placed-del")) return;
       dragging = true;
       el.classList.add("dragging","active");
-      el.setPointerCapture(e.pointerId);
-      startX=e.clientX; startY=e.clientY;
+      try{ el.setPointerCapture(e.pointerId); }catch(_e){}
+      startX = e.clientX; startY = e.clientY;
       startLeftPct = entry.xPct; startTopPct = entry.yPct;
     });
     el.addEventListener("pointermove",(e)=>{
@@ -1643,29 +2003,29 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
       entry.xPct = clamp01(startLeftPct+dxPct);
       entry.yPct = clamp01(startTopPct+dyPct);
       el.style.left = (entry.xPct*100)+"%";
-      el.style.top = (entry.yPct*100)+"%";
+      el.style.top  = (entry.yPct*100)+"%";
     });
     ["pointerup","pointercancel"].forEach(evt=>{
       el.addEventListener(evt,()=>{ dragging=false; el.classList.remove("dragging"); });
     });
 
     /* resize (maintain aspect) */
-    let resizing=false, rStartX=0, rStartW=0, rStartH=0;
+    let resizing=false, rStartX=0, rStartW=0;
     handle.addEventListener("pointerdown",(e)=>{
       e.stopPropagation();
       resizing = true;
-      handle.setPointerCapture(e.pointerId);
+      try{ handle.setPointerCapture(e.pointerId); }catch(_e){}
       rStartX = e.clientX;
-      rStartW = entry.wPct; rStartH = entry.hPct;
+      rStartW = entry.wPct;
     });
     handle.addEventListener("pointermove",(e)=>{
       if(!resizing) return;
       const r = getParentRect();
       const dxPct = (e.clientX-rStartX)/r.width;
-      let newW = Math.max(0.03, rStartW + dxPct);
-      let newH = newW * (r.width/entry.aspect) / r.height;
+      const newW = Math.max(0.03, rStartW + dxPct);
+      const newH = newW * (r.width/entry.aspect) / r.height;
       entry.wPct = newW; entry.hPct = newH;
-      el.style.width = (entry.wPct*100)+"%";
+      el.style.width  = (entry.wPct*100)+"%";
       el.style.height = (entry.hPct*100)+"%";
     });
     ["pointerup","pointercancel"].forEach(evt=>{
@@ -1679,10 +2039,15 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   }
 
   function updatePlacedUI(){
-    const clearBtn=$("#clearAllBtn");
-    if(clearBtn) clearBtn.style.display=state.placed.length ? "flex" : "none";
-    if(state.placed.length){ $("#statusChip").textContent="Ready to export"; $("#statusChip").className="chip chip-ok"; }
-    else if(state.fileType){ $("#statusChip").textContent="Not signed"; $("#statusChip").className="chip chip-neutral"; }
+    const clearBtn = $("#clearAllBtn");
+    if(clearBtn) clearBtn.style.display = state.placed.length ? "flex" : "none";
+    if(state.placed.length){
+      $("#statusChip").textContent = "Ready to export";
+      $("#statusChip").className = "chip chip-ok";
+    } else if(state.fileType){
+      $("#statusChip").textContent = "Not signed";
+      $("#statusChip").className = "chip chip-neutral";
+    }
   }
   $("#clearAllBtn").addEventListener("click", ()=>{
     state.placed.forEach(p=>{ if(p._el) p._el.remove(); });
@@ -1694,7 +2059,7 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   const toolsPane = $("#toolsPane");
   function openDrawer(){ toolsPane.classList.add("open"); $("#drawerScrim").classList.add("show"); }
   function closeDrawer(){
-    if(window.innerWidth<=900){
+    if(window.innerWidth <= 900){
       toolsPane.classList.remove("open");
       $("#drawerScrim").classList.remove("show");
     }
@@ -1702,19 +2067,19 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
   $("#mobileFab").addEventListener("click", openDrawer);
   $("#drawerScrim").addEventListener("click", closeDrawer);
   $("#drawerHandle").addEventListener("click", closeDrawer);
+  $("#hidePanelBtn").addEventListener("click", closeDrawer);
 
   /* ---------------- export ---------------- */
   $("#exportBtn").addEventListener("click", async function(){
     if(!state.fileType){ return; }
-    if(state.placed.length===0){
-      const proceed = true; // no native confirm blocking; just warn via toast and continue
+    if(state.placed.length === 0){
       showToast("Exporting without any placed signature or stamp.", "");
     }
     try{
       if(state.fileType === "pdf"){
         await exportPdf();
       } else {
-        await exportDocxAsPdf();
+        await exportFlowAsPdf();
       }
     }catch(err){
       console.error(err);
@@ -1749,10 +2114,21 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
     markExported();
   }
 
-  async function exportDocxAsPdf(){
+  async function exportFlowAsPdf(){
     showLoading("Rendering document…");
     const target = $("#docPage");
-    const canvas = await html2canvas(target, {scale:2, useCORS:true, backgroundColor:"#ffffff"});
+
+    /* hide editing chrome (borders / × / resize handle) during capture */
+    target.classList.add("exporting");
+    await new Promise(r=> setTimeout(r, 80));
+
+    let canvas;
+    try{
+      canvas = await html2canvas(target, {scale:2, useCORS:true, backgroundColor:"#ffffff"});
+    } finally {
+      target.classList.remove("exporting");
+    }
+
     showLoading("Building PDF…");
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({unit:"pt", format:"a4"});
@@ -1811,7 +2187,11 @@ input[type=text],input[type=date],select{border-radius:10px;background:#fff;colo
 
   function debounce(fn, ms){
     let t;
-    return function(){ clearTimeout(t); t = setTimeout(fn, ms); };
+    return function(){
+      clearTimeout(t);
+      const args = arguments, ctx = this;
+      t = setTimeout(function(){ fn.apply(ctx, args); }, ms);
+    };
   }
 
   refreshTypedPreview();
